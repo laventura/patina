@@ -4,6 +4,7 @@
 //! suitable for large documents.
 
 use ropey::Rope;
+use std::str::FromStr;
 
 /// A text buffer backed by a rope data structure.
 #[derive(Debug, Clone)]
@@ -23,14 +24,24 @@ impl Buffer {
         }
     }
 
-    /// Create a buffer from a string
-    pub fn from_str(text: &str) -> Self {
+    /// Create a buffer from a string (convenience wrapper for FromStr)
+    pub fn from_text(text: &str) -> Self {
         Self {
             rope: Rope::from_str(text),
             modified: false,
         }
     }
+}
 
+impl FromStr for Buffer {
+    type Err = std::convert::Infallible;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(Self::from_text(s))
+    }
+}
+
+impl Buffer {
     /// Get the entire text as a String
     pub fn text(&self) -> String {
         self.rope.to_string()
@@ -137,7 +148,7 @@ mod tests {
 
     #[test]
     fn test_line_operations() {
-        let buf = Buffer::from_str("line 1\nline 2\nline 3");
+        let buf = Buffer::from_text("line 1\nline 2\nline 3");
         assert_eq!(buf.len_lines(), 3);
         assert_eq!(buf.line(1), Some("line 2\n".to_string()));
     }

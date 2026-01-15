@@ -19,7 +19,12 @@ pub struct Edit {
 
 impl Edit {
     /// Create an insertion edit
-    pub fn insert(position: usize, text: String, cursor_before: Selection, cursor_after: Selection) -> Self {
+    pub fn insert(
+        position: usize,
+        text: String,
+        cursor_before: Selection,
+        cursor_after: Selection,
+    ) -> Self {
         Self {
             position,
             deleted: String::new(),
@@ -30,7 +35,12 @@ impl Edit {
     }
 
     /// Create a deletion edit
-    pub fn delete(position: usize, text: String, cursor_before: Selection, cursor_after: Selection) -> Self {
+    pub fn delete(
+        position: usize,
+        text: String,
+        cursor_before: Selection,
+        cursor_after: Selection,
+    ) -> Self {
         Self {
             position,
             deleted: text,
@@ -41,7 +51,13 @@ impl Edit {
     }
 
     /// Create a replacement edit
-    pub fn replace(position: usize, deleted: String, inserted: String, cursor_before: Selection, cursor_after: Selection) -> Self {
+    pub fn replace(
+        position: usize,
+        deleted: String,
+        inserted: String,
+        cursor_before: Selection,
+        cursor_after: Selection,
+    ) -> Self {
         Self {
             position,
             deleted,
@@ -86,10 +102,10 @@ impl History {
     pub fn record(&mut self, edit: Edit) {
         // Clear redo stack on new edit
         self.redo_stack.clear();
-        
+
         // Add to undo stack
         self.undo_stack.push(edit);
-        
+
         // Trim if too large
         if self.undo_stack.len() > self.max_size {
             self.undo_stack.remove(0);
@@ -155,18 +171,18 @@ mod tests {
     #[test]
     fn test_undo_redo() {
         let mut history = History::new();
-        
+
         let edit = Edit::insert(0, "hello".to_string(), dummy_cursor(), dummy_cursor());
         history.record(edit);
-        
+
         assert!(history.can_undo());
         assert!(!history.can_redo());
-        
+
         let undone = history.undo();
         assert!(undone.is_some());
         assert!(!history.can_undo());
         assert!(history.can_redo());
-        
+
         let redone = history.redo();
         assert!(redone.is_some());
     }

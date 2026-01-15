@@ -1,5 +1,5 @@
 //! GUI rendering backend using egui.
-//! 
+//!
 //! This module is compiled only when the `gui` feature is enabled.
 
 // TODO: Implement in v0.5
@@ -10,6 +10,7 @@
 // - Settings dialog
 
 /// Placeholder for egui app
+#[derive(Default)]
 pub struct GuiApp;
 
 impl GuiApp {

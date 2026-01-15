@@ -4,11 +4,11 @@ mod app;
 mod editor;
 mod widgets;
 
-pub use app::App;
+pub use app::{App, ViewMode};
 pub use editor::EditorWidget;
 
 use crossterm::{
-    event::{self, Event, KeyCode, KeyEvent, KeyModifiers},
+    event::{self, Event, KeyEvent},
     execute,
     terminal::{disable_raw_mode, enable_raw_mode, EnterAlternateScreen, LeaveAlternateScreen},
 };

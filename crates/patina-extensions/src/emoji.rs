@@ -1,12 +1,12 @@
 //! Emoji shortcode expansion.
 
-use std::collections::HashMap;
 use once_cell::sync::Lazy;
+use std::collections::HashMap;
 
 /// Common emoji shortcodes (subset - full list would be ~1800)
 static EMOJI: Lazy<HashMap<&'static str, &'static str>> = Lazy::new(|| {
     let mut m = HashMap::new();
-    
+
     // Smileys
     m.insert("smile", "😊");
     m.insert("grin", "😁");
@@ -16,7 +16,7 @@ static EMOJI: Lazy<HashMap<&'static str, &'static str>> = Lazy::new(|| {
     m.insert("heart_eyes", "😍");
     m.insert("thinking", "🤔");
     m.insert("sunglasses", "😎");
-    
+
     // Gestures
     m.insert("+1", "👍");
     m.insert("thumbsup", "👍");
@@ -26,12 +26,12 @@ static EMOJI: Lazy<HashMap<&'static str, &'static str>> = Lazy::new(|| {
     m.insert("clap", "👏");
     m.insert("pray", "🙏");
     m.insert("muscle", "💪");
-    
+
     // Hearts
     m.insert("heart", "❤️");
     m.insert("sparkling_heart", "💖");
     m.insert("broken_heart", "💔");
-    
+
     // Objects
     m.insert("rocket", "🚀");
     m.insert("star", "⭐");
@@ -42,7 +42,7 @@ static EMOJI: Lazy<HashMap<&'static str, &'static str>> = Lazy::new(|| {
     m.insert("memo", "📝");
     m.insert("computer", "💻");
     m.insert("phone", "📱");
-    
+
     // Nature
     m.insert("sun", "☀️");
     m.insert("moon", "🌙");
@@ -50,7 +50,7 @@ static EMOJI: Lazy<HashMap<&'static str, &'static str>> = Lazy::new(|| {
     m.insert("rainbow", "🌈");
     m.insert("tree", "🌳");
     m.insert("flower", "🌸");
-    
+
     // Symbols
     m.insert("check", "✅");
     m.insert("x", "❌");
@@ -63,7 +63,7 @@ static EMOJI: Lazy<HashMap<&'static str, &'static str>> = Lazy::new(|| {
     m.insert("arrow_left", "⬅️");
     m.insert("arrow_up", "⬆️");
     m.insert("arrow_down", "⬇️");
-    
+
     // Programming related
     m.insert("bug", "🐛");
     m.insert("gear", "⚙️");
@@ -75,7 +75,7 @@ static EMOJI: Lazy<HashMap<&'static str, &'static str>> = Lazy::new(|| {
     m.insert("key", "🔑");
     m.insert("sparkles", "✨");
     m.insert("zap", "⚡");
-    
+
     m
 });
 
@@ -97,7 +97,7 @@ impl EmojiExpander {
     pub fn expand_all(&self, text: &str) -> String {
         let mut result = String::with_capacity(text.len());
         let mut chars = text.chars().peekable();
-        
+
         while let Some(c) = chars.next() {
             if c == ':' {
                 // Try to parse shortcode
@@ -105,16 +105,16 @@ impl EmojiExpander {
                     .by_ref()
                     .take_while(|&c| c != ':' && c != ' ' && c != '\n')
                     .collect();
-                
+
                 // Check if we ended with a colon (valid shortcode)
-                if let Some(&':') = text[result.len() + 1 + shortcode.len()..].chars().next() {
+                if let Some(':') = text[result.len() + 1 + shortcode.len()..].chars().next() {
                     if let Some(emoji) = EMOJI.get(shortcode.as_str()) {
                         result.push_str(emoji);
                         chars.next(); // Skip closing colon
                         continue;
                     }
                 }
-                
+
                 // Not a valid shortcode, output as-is
                 result.push(':');
                 result.push_str(&shortcode);
@@ -122,7 +122,7 @@ impl EmojiExpander {
                 result.push(c);
             }
         }
-        
+
         result
     }
 

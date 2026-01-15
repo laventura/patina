@@ -9,12 +9,12 @@ pub mod tui;
 #[cfg(feature = "gui")]
 pub mod gui;
 
-pub mod theme;
 pub mod style;
+pub mod theme;
 
 // Re-exports
-pub use theme::Theme;
 pub use style::EditorStyle;
+pub use theme::Theme;
 
 /// Color representation (RGBA)
 #[derive(Debug, Clone, Copy, PartialEq)]

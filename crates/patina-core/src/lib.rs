@@ -5,19 +5,19 @@
 
 pub mod buffer;
 pub mod document;
-pub mod parser;
 pub mod frontmatter;
-pub mod syntax;
-pub mod selection;
 pub mod history;
+pub mod parser;
+pub mod selection;
+pub mod syntax;
 
 // Re-exports for convenience
 pub use buffer::Buffer;
 pub use document::Document;
-pub use parser::MarkdownParser;
 pub use frontmatter::Frontmatter;
-pub use selection::Selection;
 pub use history::History;
+pub use parser::MarkdownParser;
+pub use selection::Selection;
 
 /// Core result type
 pub type Result<T> = std::result::Result<T, Error>;

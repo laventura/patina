@@ -48,13 +48,9 @@ fn main() -> Result<()> {
 
     // Initialize logging
     if cli.debug {
-        env_logger::Builder::from_env(
-            env_logger::Env::default().default_filter_or("debug")
-        ).init();
+        env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("debug")).init();
     } else {
-        env_logger::Builder::from_env(
-            env_logger::Env::default().default_filter_or("warn")
-        ).init();
+        env_logger::Builder::from_env(env_logger::Env::default().default_filter_or("warn")).init();
     }
 
     log::info!("Starting Patina v{}", env!("CARGO_PKG_VERSION"));

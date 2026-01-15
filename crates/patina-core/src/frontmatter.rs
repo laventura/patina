@@ -2,6 +2,7 @@
 
 use serde_json::Value;
 use std::collections::HashMap;
+use std::fmt;
 
 /// Frontmatter format
 #[derive(Debug, Clone, Copy, PartialEq)]
@@ -26,14 +27,13 @@ impl Frontmatter {
     /// Returns (Option<Frontmatter>, body_content)
     pub fn extract(content: &str) -> (Option<Self>, &str) {
         let trimmed = content.trim_start();
-        
+
         // Check for YAML frontmatter (---)
-        if trimmed.starts_with("---") {
-            if let Some(end) = trimmed[3..].find("\n---") {
-                let raw = &trimmed[3..end + 3].trim();
-                let body_start = end + 7; // Skip "---\n" + content + "\n---"
-                let body = &trimmed[body_start..].trim_start_matches('\n');
-                
+        if let Some(rest) = trimmed.strip_prefix("---") {
+            if let Some(end) = rest.find("\n---") {
+                let raw = rest[..end].trim();
+                let body = rest[end + 4..].trim_start_matches('\n');
+
                 if let Ok(data) = Self::parse_yaml(raw) {
                     return (
                         Some(Self {
@@ -46,14 +46,13 @@ impl Frontmatter {
                 }
             }
         }
-        
+
         // Check for TOML frontmatter (+++)
-        if trimmed.starts_with("+++") {
-            if let Some(end) = trimmed[3..].find("\n+++") {
-                let raw = &trimmed[3..end + 3].trim();
-                let body_start = end + 7;
-                let body = &trimmed[body_start..].trim_start_matches('\n');
-                
+        if let Some(rest) = trimmed.strip_prefix("+++") {
+            if let Some(end) = rest.find("\n+++") {
+                let raw = rest[..end].trim();
+                let body = rest[end + 4..].trim_start_matches('\n');
+
                 if let Ok(data) = Self::parse_toml(raw) {
                     return (
                         Some(Self {
@@ -66,29 +65,25 @@ impl Frontmatter {
                 }
             }
         }
-        
+
         (None, content)
     }
 
     /// Parse YAML frontmatter
     fn parse_yaml(raw: &str) -> Result<HashMap<String, Value>, String> {
-        let yaml_value: serde_yaml::Value = serde_yaml::from_str(raw)
-            .map_err(|e| e.to_string())?;
-        
-        let json_value: Value = serde_json::to_value(yaml_value)
-            .map_err(|e| e.to_string())?;
-        
+        let yaml_value: serde_yaml::Value = serde_yaml::from_str(raw).map_err(|e| e.to_string())?;
+
+        let json_value: Value = serde_json::to_value(yaml_value).map_err(|e| e.to_string())?;
+
         Self::value_to_hashmap(json_value)
     }
 
     /// Parse TOML frontmatter
     fn parse_toml(raw: &str) -> Result<HashMap<String, Value>, String> {
-        let toml_value: toml::Value = toml::from_str(raw)
-            .map_err(|e| e.to_string())?;
-        
-        let json_value: Value = serde_json::to_value(toml_value)
-            .map_err(|e| e.to_string())?;
-        
+        let toml_value: toml::Value = toml::from_str(raw).map_err(|e| e.to_string())?;
+
+        let json_value: Value = serde_json::to_value(toml_value).map_err(|e| e.to_string())?;
+
         Self::value_to_hashmap(json_value)
     }
 
@@ -109,12 +104,13 @@ impl Frontmatter {
     pub fn get_str(&self, key: &str) -> Option<&str> {
         self.data.get(key).and_then(|v| v.as_str())
     }
+}
 
-    /// Convert back to string representation
-    pub fn to_string(&self) -> String {
+impl fmt::Display for Frontmatter {
+    fn fmt(&self, f: &mut fmt::Formatter<'_>) -> fmt::Result {
         match self.format {
-            FrontmatterFormat::Yaml => format!("---\n{}\n---", self.raw),
-            FrontmatterFormat::Toml => format!("+++\n{}\n+++", self.raw),
+            FrontmatterFormat::Yaml => write!(f, "---\n{}\n---", self.raw),
+            FrontmatterFormat::Toml => write!(f, "+++\n{}\n+++", self.raw),
         }
     }
 }
@@ -127,7 +123,7 @@ mod tests {
     fn test_yaml_frontmatter() {
         let content = "---\ntitle: Test\nauthor: Me\n---\n\n# Hello";
         let (fm, body) = Frontmatter::extract(content);
-        
+
         assert!(fm.is_some());
         let fm = fm.unwrap();
         assert_eq!(fm.format, FrontmatterFormat::Yaml);
@@ -139,7 +135,7 @@ mod tests {
     fn test_toml_frontmatter() {
         let content = "+++\ntitle = \"Test\"\nauthor = \"Me\"\n+++\n\n# Hello";
         let (fm, body) = Frontmatter::extract(content);
-        
+
         assert!(fm.is_some());
         let fm = fm.unwrap();
         assert_eq!(fm.format, FrontmatterFormat::Toml);
@@ -151,7 +147,7 @@ mod tests {
     fn test_no_frontmatter() {
         let content = "# Just a heading\n\nSome content.";
         let (fm, body) = Frontmatter::extract(content);
-        
+
         assert!(fm.is_none());
         assert_eq!(body, content);
     }

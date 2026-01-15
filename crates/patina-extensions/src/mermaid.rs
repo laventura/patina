@@ -35,7 +35,7 @@ impl MermaidRenderer {
     /// Render a Mermaid diagram to text
     pub fn render(&self, mermaid: &str) -> Result<String, MermaidError> {
         let diagram_type = self.detect_type(mermaid)?;
-        
+
         match diagram_type {
             DiagramType::Flowchart => self.render_flowchart(mermaid),
             DiagramType::Sequence => self.render_sequence(mermaid),
@@ -47,18 +47,20 @@ impl MermaidRenderer {
 
     fn detect_type(&self, mermaid: &str) -> Result<DiagramType, MermaidError> {
         let first_line = mermaid.lines().next().unwrap_or("").trim().to_lowercase();
-        
-        Ok(if first_line.starts_with("graph") || first_line.starts_with("flowchart") {
-            DiagramType::Flowchart
-        } else if first_line.starts_with("sequencediagram") {
-            DiagramType::Sequence
-        } else if first_line.starts_with("statediagram") {
-            DiagramType::State
-        } else if first_line.starts_with("pie") {
-            DiagramType::Pie
-        } else {
-            DiagramType::Unknown
-        })
+
+        Ok(
+            if first_line.starts_with("graph") || first_line.starts_with("flowchart") {
+                DiagramType::Flowchart
+            } else if first_line.starts_with("sequencediagram") {
+                DiagramType::Sequence
+            } else if first_line.starts_with("statediagram") {
+                DiagramType::State
+            } else if first_line.starts_with("pie") {
+                DiagramType::Pie
+            } else {
+                DiagramType::Unknown
+            },
+        )
     }
 
     fn render_flowchart(&self, _mermaid: &str) -> Result<String, MermaidError> {
@@ -78,7 +80,10 @@ impl MermaidRenderer {
 
     fn render_sequence(&self, _mermaid: &str) -> Result<String, MermaidError> {
         // Placeholder
-        Ok("┌─────┐          ┌─────┐\n│  A  │───────▶│  B  │\n└─────┘          └─────┘".to_string())
+        Ok(
+            "┌─────┐          ┌─────┐\n│  A  │───────▶│  B  │\n└─────┘          └─────┘"
+                .to_string(),
+        )
     }
 
     fn render_state(&self, _mermaid: &str) -> Result<String, MermaidError> {
@@ -113,7 +118,7 @@ pub enum DiagramType {
 pub enum MermaidError {
     #[error("Failed to parse diagram")]
     ParseError,
-    
+
     #[error("Unsupported diagram type")]
     UnsupportedDiagram,
 }

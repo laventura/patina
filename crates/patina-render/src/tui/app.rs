@@ -1,7 +1,7 @@
 //! TUI Application state and main loop.
 
-use patina_core::Document;
 use crate::Theme;
+use patina_core::Document;
 
 /// TUI Application state
 pub struct App {

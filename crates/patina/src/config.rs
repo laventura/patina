@@ -11,16 +11,16 @@ use std::path::{Path, PathBuf};
 pub struct Config {
     /// Color theme name
     pub theme: String,
-    
+
     /// Editor settings
     pub editor: EditorConfig,
-    
+
     /// UI settings
     pub ui: UiConfig,
-    
+
     /// Keybinding mode
     pub keybindings: KeybindingMode,
-    
+
     /// Markdown settings
     pub markdown: MarkdownConfig,
 }
@@ -127,9 +127,7 @@ impl Default for MarkdownConfig {
 impl Config {
     /// Load configuration from file
     pub fn load(path: Option<&Path>) -> Result<Self> {
-        let config_path = path
-            .map(PathBuf::from)
-            .or_else(Self::default_path);
+        let config_path = path.map(PathBuf::from).or_else(Self::default_path);
 
         if let Some(path) = config_path {
             if path.exists() {
@@ -142,11 +140,10 @@ impl Config {
         Ok(Self::default())
     }
 
-    /// Save configuration to file
+    /// Save configuration to file (used in v0.2+ for settings UI)
+    #[allow(dead_code)]
     pub fn save(&self, path: Option<&Path>) -> Result<()> {
-        let config_path = path
-            .map(PathBuf::from)
-            .or_else(Self::default_path);
+        let config_path = path.map(PathBuf::from).or_else(Self::default_path);
 
         if let Some(path) = config_path {
             if let Some(parent) = path.parent() {

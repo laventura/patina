@@ -8,9 +8,8 @@ use std::path::PathBuf;
 use std::time::Duration;
 
 use patina_core::Document;
-use patina_render::tui::{App as TuiApp, ViewMode};
+use patina_render::tui::App as TuiApp;
 use patina_render::Theme;
-use patina_i18n::t;
 
 use crate::config::Config;
 use crate::ui;
@@ -21,7 +20,8 @@ pub struct App {
     tui: TuiApp,
     /// Terminal
     terminal: Terminal<CrosstermBackend<io::Stdout>>,
-    /// Configuration
+    /// Configuration (used in v0.2+ for editor settings)
+    #[allow(dead_code)]
     config: Config,
 }
 
@@ -30,10 +30,10 @@ impl App {
     pub fn new(config: Config) -> Result<Self> {
         let terminal = patina_render::tui::init_terminal()?;
         let mut tui = TuiApp::new();
-        
+
         // Apply config
         tui.theme = Theme::by_name(&config.theme);
-        
+
         Ok(Self {
             tui,
             terminal,
@@ -77,47 +77,47 @@ impl App {
             KeyCode::Char('q') if ctrl => {
                 self.tui.quit();
             }
-            
+
             // Save
             KeyCode::Char('s') if ctrl => {
                 self.save_document()?;
             }
-            
+
             // Open
             KeyCode::Char('o') if ctrl => {
                 // TODO: Open file dialog
             }
-            
+
             // New
             KeyCode::Char('n') if ctrl => {
                 self.new_document();
             }
-            
+
             // Close tab
             KeyCode::Char('w') if ctrl => {
                 self.tui.close_active_document();
             }
-            
+
             // Next tab
             KeyCode::Tab if ctrl => {
                 self.tui.next_document();
             }
-            
+
             // Previous tab
             KeyCode::BackTab if ctrl => {
                 self.tui.prev_document();
             }
-            
+
             // Toggle Zen mode
             KeyCode::Char('z') if ctrl && shift => {
                 self.toggle_zen_mode();
             }
-            
+
             // Cycle view mode
             KeyCode::Char('\\') if ctrl => {
                 self.tui.cycle_view_mode();
             }
-            
+
             // Navigation
             KeyCode::Up => {
                 let doc = self.tui.active_document_mut();
@@ -142,7 +142,7 @@ impl App {
                 let doc = self.tui.active_document_mut();
                 doc.cursor.1 += 1;
             }
-            
+
             // Text input
             KeyCode::Char(c) => {
                 let doc = self.tui.active_document_mut();
@@ -150,7 +150,7 @@ impl App {
                 doc.buffer.insert(pos, &c.to_string());
                 doc.cursor.1 += 1;
             }
-            
+
             KeyCode::Enter => {
                 let doc = self.tui.active_document_mut();
                 let pos = doc.buffer.line_col_to_char(doc.cursor.0, doc.cursor.1);
@@ -158,7 +158,7 @@ impl App {
                 doc.cursor.0 += 1;
                 doc.cursor.1 = 0;
             }
-            
+
             KeyCode::Backspace => {
                 let doc = self.tui.active_document_mut();
                 let pos = doc.buffer.line_col_to_char(doc.cursor.0, doc.cursor.1);

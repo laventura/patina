@@ -45,8 +45,9 @@ impl Selection {
 
     /// Get the start of the selection (min position)
     pub fn start(&self) -> Position {
-        if self.anchor.line < self.head.line 
-            || (self.anchor.line == self.head.line && self.anchor.col <= self.head.col) {
+        if self.anchor.line < self.head.line
+            || (self.anchor.line == self.head.line && self.anchor.col <= self.head.col)
+        {
             self.anchor
         } else {
             self.head
@@ -55,8 +56,9 @@ impl Selection {
 
     /// Get the end of the selection (max position)
     pub fn end(&self) -> Position {
-        if self.anchor.line > self.head.line 
-            || (self.anchor.line == self.head.line && self.anchor.col >= self.head.col) {
+        if self.anchor.line > self.head.line
+            || (self.anchor.line == self.head.line && self.anchor.col >= self.head.col)
+        {
             self.anchor
         } else {
             self.head
@@ -70,9 +72,9 @@ impl Selection {
         } else {
             self.head.line.saturating_add(delta as usize)
         };
-        
+
         self.head.line = new_line;
-        
+
         if !extend {
             self.anchor = self.head;
         }
@@ -85,9 +87,9 @@ impl Selection {
         } else {
             self.head.col.saturating_add(delta as usize)
         };
-        
+
         self.head.col = new_col;
-        
+
         if !extend {
             self.anchor = self.head;
         }

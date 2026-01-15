@@ -1,10 +1,6 @@
 //! Markdown parser using comrak.
 
-use comrak::{
-    nodes::AstNode,
-    parse_document, Arena, Options,
-    plugins::syntect::SyntectAdapter,
-};
+use comrak::{nodes::AstNode, parse_document, Arena, Options};
 
 /// Markdown parser configuration
 pub struct MarkdownParser {
@@ -15,7 +11,7 @@ impl MarkdownParser {
     /// Create a new parser with default GFM options
     pub fn new() -> Self {
         let mut options = Options::default();
-        
+
         // Enable GitHub Flavored Markdown extensions
         options.extension.strikethrough = true;
         options.extension.table = true;
@@ -23,14 +19,14 @@ impl MarkdownParser {
         options.extension.tasklist = true;
         options.extension.footnotes = true;
         options.extension.description_lists = true;
-        
+
         // Parsing options
         options.parse.smart = true;
-        
+
         // Render options
         options.render.github_pre_lang = true;
         options.render.unsafe_ = true; // Allow raw HTML
-        
+
         Self { options }
     }
 
@@ -38,10 +34,10 @@ impl MarkdownParser {
     pub fn to_html(&self, markdown: &str) -> String {
         let arena = Arena::new();
         let root = parse_document(&arena, markdown, &self.options);
-        
+
         let mut html = Vec::new();
         comrak::format_html(root, &self.options, &mut html).unwrap();
-        
+
         String::from_utf8(html).unwrap_or_default()
     }
 
@@ -54,7 +50,7 @@ impl MarkdownParser {
     pub fn extract_headings(&self, markdown: &str) -> Vec<Heading> {
         let arena = Arena::new();
         let root = parse_document(&arena, markdown, &self.options);
-        
+
         let mut headings = Vec::new();
         Self::walk_headings(root, &mut headings);
         headings
@@ -62,7 +58,7 @@ impl MarkdownParser {
 
     fn walk_headings<'a>(node: &'a AstNode<'a>, headings: &mut Vec<Heading>) {
         use comrak::nodes::NodeValue;
-        
+
         if let NodeValue::Heading(heading) = &node.data.borrow().value {
             let text = Self::extract_text(node);
             let line = node.data.borrow().sourcepos.start.line;
@@ -72,7 +68,7 @@ impl MarkdownParser {
                 line,
             });
         }
-        
+
         for child in node.children() {
             Self::walk_headings(child, headings);
         }
@@ -80,7 +76,7 @@ impl MarkdownParser {
 
     fn extract_text<'a>(node: &'a AstNode<'a>) -> String {
         use comrak::nodes::NodeValue;
-        
+
         let mut text = String::new();
         for child in node.children() {
             match &child.data.borrow().value {
@@ -133,7 +129,7 @@ mod tests {
     fn test_extract_headings() {
         let parser = MarkdownParser::new();
         let headings = parser.extract_headings("# One\n## Two\n### Three");
-        
+
         assert_eq!(headings.len(), 3);
         assert_eq!(headings[0].level, 1);
         assert_eq!(headings[0].text, "One");

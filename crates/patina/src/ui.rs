@@ -3,7 +3,7 @@
 use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
-    text::{Line, Span},
+    text::Line,
     widgets::{Block, Borders, Paragraph, Tabs},
     Frame,
 };
@@ -24,9 +24,9 @@ fn draw_normal_mode(frame: &mut Frame, app: &App) {
     let chunks = Layout::default()
         .direction(Direction::Vertical)
         .constraints([
-            Constraint::Length(1),  // Tab bar
-            Constraint::Min(1),     // Editor area
-            Constraint::Length(1),  // Status bar
+            Constraint::Length(1), // Tab bar
+            Constraint::Min(1),    // Editor area
+            Constraint::Length(1), // Status bar
         ])
         .split(frame.area());
 
@@ -38,11 +38,11 @@ fn draw_normal_mode(frame: &mut Frame, app: &App) {
 /// Draw Zen mode UI (minimal, centered)
 fn draw_zen_mode(frame: &mut Frame, app: &App) {
     let area = frame.area();
-    
+
     // Center the content
     let zen_width = 80.min(area.width.saturating_sub(4));
     let x_offset = (area.width.saturating_sub(zen_width)) / 2;
-    
+
     let zen_area = Rect {
         x: x_offset,
         y: 1,
@@ -51,15 +51,15 @@ fn draw_zen_mode(frame: &mut Frame, app: &App) {
     };
 
     let doc = app.active_document();
-    let editor = EditorWidget::new(doc, &app.theme)
-        .line_numbers(false);
-    
+    let editor = EditorWidget::new(doc, &app.theme).line_numbers(false);
+
     frame.render_widget(editor, zen_area);
 }
 
 /// Draw the tab bar
 fn draw_tab_bar(frame: &mut Frame, area: Rect, app: &App) {
-    let titles: Vec<Line> = app.documents
+    let titles: Vec<Line> = app
+        .documents
         .iter()
         .map(|doc| {
             let title = doc.title();
@@ -75,13 +75,14 @@ fn draw_tab_bar(frame: &mut Frame, area: Rect, app: &App) {
             app.theme.fg_muted.g,
             app.theme.fg_muted.b,
         )))
-        .highlight_style(Style::default()
-            .fg(Color::Rgb(
-                app.theme.fg_primary.r,
-                app.theme.fg_primary.g,
-                app.theme.fg_primary.b,
-            ))
-            .add_modifier(Modifier::BOLD)
+        .highlight_style(
+            Style::default()
+                .fg(Color::Rgb(
+                    app.theme.fg_primary.r,
+                    app.theme.fg_primary.g,
+                    app.theme.fg_primary.b,
+                ))
+                .add_modifier(Modifier::BOLD),
         )
         .divider("|");
 
@@ -91,7 +92,7 @@ fn draw_tab_bar(frame: &mut Frame, area: Rect, app: &App) {
 /// Draw the editor area
 fn draw_editor_area(frame: &mut Frame, area: Rect, app: &App) {
     let doc = app.active_document();
-    
+
     match app.view_mode {
         ViewMode::Raw => {
             let editor = EditorWidget::new(doc, &app.theme);
@@ -99,18 +100,13 @@ fn draw_editor_area(frame: &mut Frame, area: Rect, app: &App) {
         }
         ViewMode::Rendered => {
             // TODO: Rendered view
-            let block = Block::default()
-                .title("Preview")
-                .borders(Borders::ALL);
+            let block = Block::default().title("Preview").borders(Borders::ALL);
             frame.render_widget(block, area);
         }
         ViewMode::Split => {
             let chunks = Layout::default()
                 .direction(Direction::Horizontal)
-                .constraints([
-                    Constraint::Percentage(50),
-                    Constraint::Percentage(50),
-                ])
+                .constraints([Constraint::Percentage(50), Constraint::Percentage(50)])
                 .split(area);
 
             // Left: Raw editor
@@ -118,9 +114,7 @@ fn draw_editor_area(frame: &mut Frame, area: Rect, app: &App) {
             frame.render_widget(editor, chunks[0]);
 
             // Right: Preview
-            let preview = Block::default()
-                .title("Preview")
-                .borders(Borders::LEFT);
+            let preview = Block::default().title("Preview").borders(Borders::LEFT);
             frame.render_widget(preview, chunks[1]);
         }
     }
@@ -129,13 +123,13 @@ fn draw_editor_area(frame: &mut Frame, area: Rect, app: &App) {
 /// Draw the status bar
 fn draw_status_bar(frame: &mut Frame, area: Rect, app: &App) {
     let doc = app.active_document();
-    
+
     let mode = match app.view_mode {
         ViewMode::Raw => "RAW",
         ViewMode::Rendered => "PREVIEW",
         ViewMode::Split => "SPLIT",
     };
-    
+
     let status = format!(
         " {} │ Ln {}, Col {} │ {} │ {} ",
         if doc.is_modified() { "●" } else { "○" },

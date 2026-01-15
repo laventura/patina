@@ -1,19 +1,15 @@
 //! Syntax highlighting using syntect.
 
-use syntect::highlighting::{Theme, ThemeSet, Style};
-use syntect::parsing::{SyntaxSet, SyntaxReference};
-use syntect::easy::HighlightLines;
 use once_cell::sync::Lazy;
+use syntect::easy::HighlightLines;
+use syntect::highlighting::{Style, Theme, ThemeSet};
+use syntect::parsing::{SyntaxReference, SyntaxSet};
 
 /// Global syntax set (loaded once)
-static SYNTAX_SET: Lazy<SyntaxSet> = Lazy::new(|| {
-    SyntaxSet::load_defaults_newlines()
-});
+static SYNTAX_SET: Lazy<SyntaxSet> = Lazy::new(|| SyntaxSet::load_defaults_newlines());
 
 /// Global theme set
-static THEME_SET: Lazy<ThemeSet> = Lazy::new(|| {
-    ThemeSet::load_defaults()
-});
+static THEME_SET: Lazy<ThemeSet> = Lazy::new(|| ThemeSet::load_defaults());
 
 /// A syntax highlighter
 pub struct Highlighter {
@@ -30,13 +26,16 @@ impl Highlighter {
 
     /// Get the current theme
     pub fn theme(&self) -> &Theme {
-        THEME_SET.themes.get(&self.theme_name)
+        THEME_SET
+            .themes
+            .get(&self.theme_name)
             .unwrap_or_else(|| THEME_SET.themes.get("base16-ocean.dark").unwrap())
     }
 
     /// Get syntax for a language
     pub fn syntax_for_language(&self, lang: &str) -> Option<&SyntaxReference> {
-        SYNTAX_SET.find_syntax_by_token(lang)
+        SYNTAX_SET
+            .find_syntax_by_token(lang)
             .or_else(|| SYNTAX_SET.find_syntax_by_extension(lang))
     }
 
@@ -46,18 +45,29 @@ impl Highlighter {
     }
 
     /// Highlight a line of code
-    pub fn highlight_line<'a>(&self, line: &'a str, syntax: &SyntaxReference) -> Vec<(Style, &'a str)> {
+    pub fn highlight_line<'a>(
+        &self,
+        line: &'a str,
+        syntax: &SyntaxReference,
+    ) -> Vec<(Style, &'a str)> {
         let mut highlighter = HighlightLines::new(syntax, self.theme());
-        highlighter.highlight_line(line, &SYNTAX_SET)
+        highlighter
+            .highlight_line(line, &SYNTAX_SET)
             .unwrap_or_else(|_| vec![(Style::default(), line)])
     }
 
     /// Highlight multiple lines
-    pub fn highlight_lines<'a>(&self, lines: &'a [&'a str], syntax: &SyntaxReference) -> Vec<Vec<(Style, &'a str)>> {
+    pub fn highlight_lines<'a>(
+        &self,
+        lines: &'a [&'a str],
+        syntax: &SyntaxReference,
+    ) -> Vec<Vec<(Style, &'a str)>> {
         let mut highlighter = HighlightLines::new(syntax, self.theme());
-        lines.iter()
+        lines
+            .iter()
             .map(|line| {
-                highlighter.highlight_line(line, &SYNTAX_SET)
+                highlighter
+                    .highlight_line(line, &SYNTAX_SET)
                     .unwrap_or_else(|_| vec![(Style::default(), *line)])
             })
             .collect()
@@ -65,12 +75,20 @@ impl Highlighter {
 
     /// List available themes
     pub fn available_themes() -> Vec<&'static str> {
-        THEME_SET.themes.keys().map(|s| s.as_str()).collect()
+        THEME_SET
+            .themes
+            .keys()
+            .map(|s: &String| s.as_str())
+            .collect()
     }
 
     /// List available syntaxes
     pub fn available_syntaxes() -> Vec<&'static str> {
-        SYNTAX_SET.syntaxes().iter().map(|s| s.name.as_str()).collect()
+        SYNTAX_SET
+            .syntaxes()
+            .iter()
+            .map(|s| s.name.as_str())
+            .collect()
     }
 
     /// Set theme
@@ -94,7 +112,12 @@ pub fn style_to_rgb(style: &Style) -> (u8, u8, u8) {
 
 /// Convert syntect Style to RGBA tuple
 pub fn style_to_rgba(style: &Style) -> (u8, u8, u8, u8) {
-    (style.foreground.r, style.foreground.g, style.foreground.b, style.foreground.a)
+    (
+        style.foreground.r,
+        style.foreground.g,
+        style.foreground.b,
+        style.foreground.a,
+    )
 }
 
 #[cfg(test)]

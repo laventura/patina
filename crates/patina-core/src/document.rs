@@ -1,7 +1,8 @@
 //! Document model combining buffer, frontmatter, and file metadata.
 
-use std::path::PathBuf;
 use crate::{Buffer, Frontmatter, History};
+use std::path::PathBuf;
+use std::str::FromStr;
 
 /// A document with its buffer, metadata, and editing history.
 #[derive(Debug)]
@@ -36,17 +37,17 @@ impl Document {
     /// Create a document from a file path
     pub fn from_file(path: PathBuf) -> std::io::Result<Self> {
         let content = std::fs::read_to_string(&path)?;
-        let mut doc = Self::from_str(&content);
+        let mut doc = Self::from_content(&content);
         doc.path = Some(path);
         doc.buffer.mark_saved();
         Ok(doc)
     }
 
-    /// Create a document from a string
-    pub fn from_str(content: &str) -> Self {
+    /// Create a document from a string (convenience wrapper for FromStr)
+    pub fn from_content(content: &str) -> Self {
         let (frontmatter, body) = Frontmatter::extract(content);
         Self {
-            buffer: Buffer::from_str(body),
+            buffer: Buffer::from_text(body),
             frontmatter,
             path: None,
             history: History::new(),
@@ -54,7 +55,17 @@ impl Document {
             scroll_offset: 0,
         }
     }
+}
 
+impl FromStr for Document {
+    type Err = std::convert::Infallible;
+
+    fn from_str(s: &str) -> Result<Self, Self::Err> {
+        Ok(Self::from_content(s))
+    }
+}
+
+impl Document {
     /// Save document to its path
     pub fn save(&mut self) -> std::io::Result<()> {
         if let Some(ref path) = self.path {
@@ -79,7 +90,7 @@ impl Document {
     /// Get the full content including frontmatter
     pub fn full_content(&self) -> String {
         match &self.frontmatter {
-            Some(fm) => format!("{}\n{}", fm.to_string(), self.buffer.text()),
+            Some(fm) => format!("{}\n{}", fm, self.buffer.text()),
             None => self.buffer.text(),
         }
     }
@@ -92,14 +103,14 @@ impl Document {
                 return title.to_string();
             }
         }
-        
+
         // Fall back to filename
         if let Some(ref path) = self.path {
             if let Some(name) = path.file_name() {
                 return name.to_string_lossy().to_string();
             }
         }
-        
+
         "Untitled".to_string()
     }
 

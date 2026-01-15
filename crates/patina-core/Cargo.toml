@@ -24,5 +24,6 @@ thiserror.workspace = true
 log.workspace = true
 unicode-width.workspace = true
 unicode-segmentation.workspace = true
+once_cell.workspace = true
 
 [dev-dependencies]

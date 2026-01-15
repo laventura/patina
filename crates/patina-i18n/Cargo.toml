@@ -6,10 +6,5 @@ license.workspace = true
 description = "Internationalization for Patina"
 
 [dependencies]
-fluent.workspace = true
-fluent-bundle.workspace = true
-unic-langid.workspace = true
-
-thiserror.workspace = true
-log.workspace = true
-once_cell.workspace = true
+# Stub implementation for v0.1.0
+# Full i18n with Fluent will be added in v0.6.0
