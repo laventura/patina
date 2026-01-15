@@ -1,0 +1,7 @@
+{
+  "name": "bench-perf",
+  "description": "Benchmarks performance against project targets: <50ms startup, <20MB memory, <15MB binary",
+  "version": "1.0.0",
+  "tags": ["rust", "performance", "benchmark", "metrics"],
+  "author": "Patina Development Team"
+}

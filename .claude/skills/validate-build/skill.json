@@ -1,0 +1,7 @@
+{
+  "name": "validate-build",
+  "description": "Validates that the entire workspace builds, passes tests, and meets code quality standards",
+  "version": "1.0.0",
+  "tags": ["rust", "build", "test", "quality"],
+  "author": "Patina Development Team"
+}

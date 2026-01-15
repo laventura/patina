@@ -1,0 +1,7 @@
+{
+  "name": "check-features",
+  "description": "Validates that all feature flag combinations in patina-render compile correctly (tui, gui, both, neither)",
+  "version": "1.0.0",
+  "tags": ["rust", "features", "build", "compilation"],
+  "author": "Patina Development Team"
+}

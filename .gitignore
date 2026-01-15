@@ -1,0 +1,140 @@
+# Rust build artifacts
+/target/
+**/target/
+**/*.rs.bk
+**/*.pdb
+
+# Cargo.lock should be committed for binaries but not libraries
+# Since patina has binaries (patina, patina-gui), keep Cargo.lock
+# Cargo.lock
+
+# Debug and release artifacts
+debug/
+release/
+
+# Generated documentation
+/docs/api/
+book/
+
+# Profiling and benchmarking
+perf.data
+perf.data.old
+flamegraph.svg
+*.profdata
+*.profraw
+cachegrind.out.*
+callgrind.out.*
+massif.out.*
+
+# Test artifacts
+*.test.md
+test_output/
+tmp/
+temp/
+
+# IDE - JetBrains
+.idea/
+*.iml
+.intellijLang.xml
+
+# IDE - VSCode
+.vscode/
+*.code-workspace
+
+# IDE - Vim/Neovim
+*.swp
+*.swo
+*.swn
+*~
+.vim/
+tags
+tags.lock
+tags.temp
+
+# IDE - Emacs
+\#*\#
+.\#*
+*.elc
+auto-save-list
+tramp
+.\#*
+
+# IDE - Sublime
+*.sublime-project
+*.sublime-workspace
+
+# OS - macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# OS - Linux
+*~
+.directory
+.Trash-*
+
+# OS - Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+
+# Claude Code local settings (personal preferences)
+.claude/settings.local.json
+.claude/.user-settings.json
+
+# Do NOT ignore .claude/skills/ - those are project-specific
+# Do NOT ignore CLAUDE.md - it's project documentation
+
+# Environment and secrets
+.env
+.env.local
+.env.*.local
+*.key
+*.pem
+credentials.json
+secrets.toml
+
+# Backup files
+*.bak
+*.backup
+*.orig
+*.tmp
+
+# Logs
+*.log
+logs/
+
+# Coverage reports
+coverage/
+*.profraw
+tarpaulin-report.html
+cobertura.xml
+lcov.info
+
+# Nix
+result
+result-*
+
+# macOS Finder attributes
+.com.apple.timemachine.donotpresent
+
+# Temporary files from editors
+.*.kate-swp
+.*.sw[a-z]
+Session.vim
+
+# Local configuration overrides (user-specific)
+config.local.toml
+.patina.local.toml
+
+# Distribution / packaging (if we create installers)
+dist/
+build/
+*.dmg
+*.exe
+*.deb
+*.rpm
+*.tar.gz
+*.zip

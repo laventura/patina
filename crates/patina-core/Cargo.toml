@@ -1,0 +1,28 @@
+[package]
+name = "patina-core"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Core library for Patina: buffer, parser, document model"
+
+[dependencies]
+# Text buffer
+ropey.workspace = true
+
+# Markdown parsing
+comrak.workspace = true
+syntect.workspace = true
+
+# Serialization (for frontmatter)
+serde.workspace = true
+serde_json.workspace = true
+serde_yaml.workspace = true
+toml.workspace = true
+
+# Utilities
+thiserror.workspace = true
+log.workspace = true
+unicode-width.workspace = true
+unicode-segmentation.workspace = true
+
+[dev-dependencies]

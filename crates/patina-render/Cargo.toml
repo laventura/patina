@@ -1,0 +1,26 @@
+[package]
+name = "patina-render"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Rendering backends for Patina (TUI and GUI)"
+
+[features]
+default = ["tui"]
+tui = ["ratatui", "crossterm"]
+gui = ["egui", "eframe"]
+
+[dependencies]
+patina-core = { path = "../patina-core" }
+
+# TUI (optional, default)
+ratatui = { workspace = true, optional = true }
+crossterm = { workspace = true, optional = true }
+
+# GUI (optional)
+egui = { workspace = true, optional = true }
+eframe = { workspace = true, optional = true }
+
+# Common
+log.workspace = true
+unicode-width.workspace = true

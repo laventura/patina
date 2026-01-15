@@ -1,0 +1,16 @@
+[package]
+name = "patina-extensions"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "Extensions for Patina: LaTeX, Mermaid, Emoji"
+
+[dependencies]
+patina-core = { path = "../patina-core" }
+
+# Utilities
+thiserror.workspace = true
+log.workspace = true
+once_cell.workspace = true
+
+[dev-dependencies]

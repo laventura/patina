@@ -1,0 +1,7 @@
+{
+  "name": "check-arch",
+  "description": "Enforces architectural boundaries: patina-core stays UI-agnostic, feature flags are used correctly, no circular dependencies",
+  "version": "1.0.0",
+  "tags": ["rust", "architecture", "dependencies", "design"],
+  "author": "Patina Development Team"
+}

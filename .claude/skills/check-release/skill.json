@@ -1,0 +1,7 @@
+{
+  "name": "check-release",
+  "description": "Validates release build with aggressive optimizations (LTO, strip, panic=abort) and runs full test suite",
+  "version": "1.0.0",
+  "tags": ["rust", "release", "build", "optimization"],
+  "author": "Patina Development Team"
+}

@@ -1,0 +1,36 @@
+[package]
+name = "patina"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "A fast, lightweight Markdown editor - TUI version"
+
+[[bin]]
+name = "patina"
+path = "src/main.rs"
+
+[dependencies]
+patina-core = { path = "../patina-core" }
+patina-render = { path = "../patina-render", features = ["tui"] }
+patina-extensions = { path = "../patina-extensions" }
+patina-i18n = { path = "../patina-i18n" }
+
+# CLI
+clap.workspace = true
+directories.workspace = true
+
+# TUI
+ratatui.workspace = true
+crossterm.workspace = true
+
+# Editor features
+git2.workspace = true
+notify.workspace = true
+fuzzy-matcher.workspace = true
+
+# Utilities
+anyhow.workspace = true
+log.workspace = true
+env_logger.workspace = true
+serde.workspace = true
+toml.workspace = true

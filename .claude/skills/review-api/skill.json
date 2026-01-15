@@ -1,0 +1,7 @@
+{
+  "name": "review-api",
+  "description": "Reviews public API changes in patina-core and patina-render for documentation, breaking changes, and proper visibility",
+  "version": "1.0.0",
+  "tags": ["rust", "api", "review", "breaking-changes"],
+  "author": "Patina Development Team"
+}

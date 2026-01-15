@@ -1,0 +1,81 @@
+[workspace]
+resolver = "2"
+members = [
+    "crates/patina",          # TUI binary
+    "crates/patina-gui",      # GUI binary (egui)
+    "crates/patina-core",     # Shared core: buffer, parser, document model
+    "crates/patina-render",   # Rendering backends (TUI + GUI)
+    "crates/patina-extensions", # LaTeX, Mermaid, Frontmatter
+    "crates/patina-i18n",     # Internationalization
+]
+
+[workspace.package]
+version = "0.1.0"
+edition = "2021"
+license = "MIT"
+authors = ["Atul Acharya"]
+repository = "https://github.com/laventura/patina"
+description = "A fast, lightweight Markdown editor written in Rust"
+keywords = ["markdown", "editor", "tui", "rust"]
+categories = ["command-line-utilities", "text-editors"]
+
+[workspace.dependencies]
+# Core
+ropey = "1.6"
+comrak = { version = "0.22", default-features = false, features = ["syntect"] }
+syntect = "5.1"
+
+# TUI
+ratatui = "0.28"
+crossterm = "0.27"
+
+# GUI (feature-gated in patina-gui)
+egui = "0.28"
+eframe = "0.28"
+
+# Parsing & Serialization
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+serde_yaml = "0.9"
+toml = "0.8"
+
+# Editor Features
+git2 = "0.19"
+notify = "6"
+fuzzy-matcher = "0.3"
+
+# Platform
+clap = { version = "4", features = ["derive"] }
+rfd = "0.14"
+arboard = "3"
+directories = "5"
+open = "5"
+
+# i18n
+fluent = "0.16"
+fluent-bundle = "0.15"
+unic-langid = "0.9"
+
+# Utilities
+thiserror = "1"
+anyhow = "1"
+log = "0.4"
+env_logger = "0.11"
+once_cell = "1.19"
+unicode-width = "0.1"
+unicode-segmentation = "1.10"
+
+# Async (optional, for file watching)
+tokio = { version = "1", features = ["rt", "fs", "sync"] }
+
+[profile.release]
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true
+
+[profile.dev]
+opt-level = 0
+
+[profile.dev.package."*"]
+opt-level = 3  # Optimize dependencies even in dev

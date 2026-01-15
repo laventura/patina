@@ -1,0 +1,34 @@
+[package]
+name = "patina-gui"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+description = "A fast, lightweight Markdown editor - GUI version (egui)"
+
+[[bin]]
+name = "patina-gui"
+path = "src/main.rs"
+
+[dependencies]
+patina-core = { path = "../patina-core" }
+patina-render = { path = "../patina-render", features = ["gui"] }
+patina-extensions = { path = "../patina-extensions" }
+patina-i18n = { path = "../patina-i18n" }
+
+# GUI
+egui.workspace = true
+eframe.workspace = true
+
+# Platform
+clap.workspace = true
+directories.workspace = true
+rfd.workspace = true
+arboard.workspace = true
+open.workspace = true
+
+# Utilities
+anyhow.workspace = true
+log.workspace = true
+env_logger.workspace = true
+serde.workspace = true
+toml.workspace = true
