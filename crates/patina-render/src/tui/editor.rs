@@ -103,8 +103,11 @@ impl<'a> Widget for EditorWidget<'a> {
                         buf.set_string(area.x, area.y + screen_row, &num_str, line_num_style);
                     }
 
-                    // Render text chunk
-                    let display: String = chunk.iter().collect();
+                    // Render text chunk (convert tabs to visible glyph)
+                    let display: String = chunk
+                        .iter()
+                        .map(|&c| if c == '\t' { '→' } else { c })
+                        .collect();
                     buf.set_string(text_area.x, text_area.y + screen_row, &display, text_style);
 
                     // Check if cursor is in this chunk
@@ -141,7 +144,11 @@ impl<'a> Widget for EditorWidget<'a> {
                     buf.set_string(area.x, area.y + screen_row, &num_str, line_num_style);
                 }
 
-                let display: String = line_chars.iter().take(text_width).collect();
+                let display: String = line_chars
+                    .iter()
+                    .take(text_width)
+                    .map(|&c| if c == '\t' { '→' } else { c })
+                    .collect();
                 buf.set_string(text_area.x, text_area.y + screen_row, &display, text_style);
 
                 // Cursor position for non-wrapped line

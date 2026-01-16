@@ -18,6 +18,7 @@ pub use frontmatter::Frontmatter;
 pub use history::{Edit, History};
 pub use parser::MarkdownParser;
 pub use selection::Selection;
+pub use syntax::Highlighter;
 
 /// Core result type
 pub type Result<T> = std::result::Result<T, Error>;

@@ -2,10 +2,14 @@
 
 mod app;
 mod editor;
+mod preview;
+mod renderer;
 mod widgets;
 
 pub use app::{App, InputMode, InputPrompt, ViewMode};
 pub use editor::EditorWidget;
+pub use preview::PreviewWidget;
+pub use renderer::{MarkdownRenderer, StyledLine};
 
 use crossterm::{
     event::{self, Event, KeyEvent},

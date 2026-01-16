@@ -13,6 +13,8 @@ pub struct EditorStyle {
     pub indent_guides: bool,
     /// Tab size in spaces
     pub tab_size: usize,
+    /// Insert spaces instead of tabs
+    pub insert_spaces: bool,
     /// Soft wrap long lines
     pub soft_wrap: bool,
     /// Maximum line width for Zen mode
@@ -29,6 +31,7 @@ impl Default for EditorStyle {
             highlight_line: true,
             indent_guides: true,
             tab_size: 4,
+            insert_spaces: true, // Default to inserting spaces
             soft_wrap: true,
             zen_width: 80,
             font_size: 14.0,

@@ -24,3 +24,5 @@ eframe = { workspace = true, optional = true }
 # Common
 log.workspace = true
 unicode-width.workspace = true
+comrak.workspace = true
+serde_json.workspace = true

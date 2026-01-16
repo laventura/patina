@@ -4,11 +4,11 @@ use ratatui::{
     layout::{Constraint, Direction, Layout, Rect},
     style::{Color, Modifier, Style},
     text::Line,
-    widgets::{Block, Borders, Paragraph, Tabs},
+    widgets::{Paragraph, Tabs},
     Frame,
 };
 
-use patina_render::tui::{App, EditorWidget, ViewMode};
+use patina_render::tui::{App, EditorWidget, PreviewWidget, ViewMode};
 
 /// Draw the entire UI
 pub fn draw(frame: &mut Frame, app: &App) {
@@ -99,9 +99,9 @@ fn draw_editor_area(frame: &mut Frame, area: Rect, app: &App) {
             frame.render_widget(editor, area);
         }
         ViewMode::Rendered => {
-            // TODO: Rendered view
-            let block = Block::default().title("Preview").borders(Borders::ALL);
-            frame.render_widget(block, area);
+            // Preview only view
+            let preview = PreviewWidget::new(doc, &app.theme, doc.scroll_offset);
+            frame.render_widget(preview, area);
         }
         ViewMode::Split => {
             let chunks = Layout::default()
@@ -114,7 +114,7 @@ fn draw_editor_area(frame: &mut Frame, area: Rect, app: &App) {
             frame.render_widget(editor, chunks[0]);
 
             // Right: Preview
-            let preview = Block::default().title("Preview").borders(Borders::LEFT);
+            let preview = PreviewWidget::new(doc, &app.theme, doc.scroll_offset);
             frame.render_widget(preview, chunks[1]);
         }
     }

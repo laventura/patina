@@ -3304,12 +3304,14 @@ version = "0.1.0"
 name = "patina-render"
 version = "0.1.0"
 dependencies = [
+ "comrak",
  "crossterm 0.27.0",
  "eframe",
  "egui",
  "log",
  "patina-core",
  "ratatui",
+ "serde_json",
  "unicode-width",
 ]
 

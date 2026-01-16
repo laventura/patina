@@ -145,6 +145,14 @@ impl App {
             ViewMode::Rendered => ViewMode::Split,
             ViewMode::Split => ViewMode::Raw,
         };
+
+        // Set status message to show current mode
+        let mode_name = match self.view_mode {
+            ViewMode::Raw => "Raw",
+            ViewMode::Rendered => "Preview",
+            ViewMode::Split => "Split",
+        };
+        self.set_status(format!("View mode: {}", mode_name));
     }
 
     /// Request quit

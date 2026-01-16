@@ -194,8 +194,12 @@ impl App {
                 self.redo();
             }
 
-            // Cycle view mode
+            // Cycle view mode (Ctrl+\ or Ctrl+P)
             KeyCode::Char('\\') if ctrl => {
+                self.tui.cycle_view_mode();
+            }
+
+            KeyCode::Char('p') if ctrl => {
                 self.tui.cycle_view_mode();
             }
 
@@ -291,6 +295,20 @@ impl App {
 
             KeyCode::Enter => {
                 self.insert_newline();
+            }
+
+            KeyCode::Tab => {
+                // Insert tab character or spaces based on config
+                if self.config.editor.use_spaces {
+                    // Insert configured number of spaces
+                    let spaces = " ".repeat(self.config.editor.tab_size);
+                    for ch in spaces.chars() {
+                        self.insert_char(ch);
+                    }
+                } else {
+                    // Insert actual tab character
+                    self.insert_char('\t');
+                }
             }
 
             KeyCode::Backspace => {
