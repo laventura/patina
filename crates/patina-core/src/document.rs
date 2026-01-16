@@ -1,6 +1,7 @@
 //! Document model combining buffer, frontmatter, and file metadata.
 
-use crate::{Buffer, Frontmatter, History};
+use crate::{Buffer, Frontmatter, History, MarkdownParser};
+use comrak::{nodes::AstNode, Arena};
 use std::path::PathBuf;
 use std::str::FromStr;
 
@@ -19,6 +20,12 @@ pub struct Document {
     pub cursor: (usize, usize),
     /// Scroll offset (for restoring view)
     pub scroll_offset: usize,
+    /// Markdown parser (shared instance)
+    parser: MarkdownParser,
+    /// Cached HTML render (updated lazily)
+    cached_html: Option<String>,
+    /// Whether the cached HTML is stale
+    html_dirty: bool,
 }
 
 impl Document {
@@ -31,6 +38,9 @@ impl Document {
             history: History::new(),
             cursor: (0, 0),
             scroll_offset: 0,
+            parser: MarkdownParser::new(),
+            cached_html: None,
+            html_dirty: true,
         }
     }
 
@@ -53,6 +63,9 @@ impl Document {
             history: History::new(),
             cursor: (0, 0),
             scroll_offset: 0,
+            parser: MarkdownParser::new(),
+            cached_html: None,
+            html_dirty: true,
         }
     }
 }
@@ -117,6 +130,32 @@ impl Document {
     /// Check if document has unsaved changes
     pub fn is_modified(&self) -> bool {
         self.buffer.is_modified()
+    }
+
+    /// Mark the document as needing a re-parse
+    pub fn invalidate_cache(&mut self) {
+        self.html_dirty = true;
+    }
+
+    /// Get the rendered HTML (cached, updates if dirty)
+    pub fn html(&mut self) -> &str {
+        if self.html_dirty || self.cached_html.is_none() {
+            let html = self.parser.to_html(&self.buffer.text());
+            self.cached_html = Some(html);
+            self.html_dirty = false;
+        }
+        self.cached_html.as_ref().unwrap()
+    }
+
+    /// Parse the document and return AST (for temporary analysis)
+    /// Note: Arena must outlive the returned AstNode
+    pub fn parse<'a>(&self, arena: &'a Arena<AstNode<'a>>) -> &'a AstNode<'a> {
+        self.parser.parse(arena, &self.buffer.text())
+    }
+
+    /// Extract headings from the document for outline
+    pub fn headings(&self) -> Vec<crate::parser::Heading> {
+        self.parser.extract_headings(&self.buffer.text())
     }
 }
 
