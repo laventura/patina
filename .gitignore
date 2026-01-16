@@ -84,6 +84,9 @@ $RECYCLE.BIN/
 .claude/settings.local.json
 .claude/.user-settings.json
 
+# Message summary
+.messages/*
+
 # Do NOT ignore .claude/skills/ - those are project-specific
 # Do NOT ignore CLAUDE.md - it's project documentation
 

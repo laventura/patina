@@ -59,10 +59,10 @@ pub struct InputPrompt {
 }
 
 impl App {
-    /// Create a new app
+    /// Create a new app with an empty document list
     pub fn new() -> Self {
         Self {
-            documents: vec![Document::new()],
+            documents: Vec::new(),
             active_doc: 0,
             theme: Theme::default(),
             should_quit: false,

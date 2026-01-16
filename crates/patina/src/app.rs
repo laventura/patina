@@ -119,6 +119,7 @@ impl App {
 
         let ctrl = key.modifiers.contains(KeyModifiers::CONTROL);
         let shift = key.modifiers.contains(KeyModifiers::SHIFT);
+        let alt = key.modifiers.contains(KeyModifiers::ALT);
 
         // Clear status message and quit_pending on any key except quit confirmation
         let is_quit_key = ctrl && matches!(key.code, KeyCode::Char('q'));
@@ -168,17 +169,17 @@ impl App {
                 self.tui.close_active_document();
             }
 
-            // Next tab
+            // Next tab (Ctrl+Tab, might not work in all terminals)
             KeyCode::Tab if ctrl => {
                 self.tui.next_document();
             }
 
-            // Previous tab
+            // Previous tab (Ctrl+Shift+Tab, might not work in all terminals)
             KeyCode::BackTab if ctrl => {
                 self.tui.prev_document();
             }
 
-            // Toggle Zen mode
+            // Toggle Zen mode (must come before Ctrl+Z for undo)
             KeyCode::Char('z') if ctrl && shift => {
                 self.toggle_zen_mode();
             }
@@ -196,6 +197,16 @@ impl App {
             // Cycle view mode
             KeyCode::Char('\\') if ctrl => {
                 self.tui.cycle_view_mode();
+            }
+
+            // Next tab (Alt+Right - works in all terminals)
+            KeyCode::Right if alt => {
+                self.tui.next_document();
+            }
+
+            // Previous tab (Alt+Left - works in all terminals)
+            KeyCode::Left if alt => {
+                self.tui.prev_document();
             }
 
             // === Navigation ===
@@ -273,7 +284,8 @@ impl App {
             }
 
             // === Text Editing ===
-            KeyCode::Char(c) => {
+            KeyCode::Char(c) if !ctrl && !alt => {
+                // Only insert regular characters, not Ctrl/Alt combinations
                 self.insert_char(c);
             }
 
@@ -292,6 +304,9 @@ impl App {
             _ => {}
         }
 
+        // Ensure cursor is visible after any operation
+        self.ensure_cursor_visible();
+
         Ok(())
     }
 
@@ -306,6 +321,26 @@ impl App {
     /// Get cursor as Selection
     fn cursor_selection(doc: &Document) -> Selection {
         Selection::cursor(Position::new(doc.cursor.0, doc.cursor.1))
+    }
+
+    /// Ensure cursor is visible by adjusting scroll offset
+    fn ensure_cursor_visible(&mut self) {
+        let doc = self.tui.active_document_mut();
+        let cursor_line = doc.cursor.0;
+
+        // Calculate visible area (terminal height minus UI elements)
+        let visible_lines = (self.terminal_height.saturating_sub(3)) as usize;
+
+        // If cursor is above visible area, scroll up
+        if cursor_line < doc.scroll_offset {
+            doc.scroll_offset = cursor_line;
+        }
+
+        // If cursor is below visible area, scroll down
+        let bottom_visible_line = doc.scroll_offset + visible_lines.saturating_sub(1);
+        if cursor_line > bottom_visible_line {
+            doc.scroll_offset = cursor_line.saturating_sub(visible_lines.saturating_sub(1));
+        }
     }
 
     /// Insert a character at cursor
@@ -453,9 +488,14 @@ impl App {
     /// Save the active document
     fn save_document(&mut self) -> Result<()> {
         let doc = self.tui.active_document_mut();
-        if doc.path.is_some() {
+        if let Some(path) = doc.path.clone() {
             doc.save()?;
-            self.tui.set_status("File saved successfully");
+            let filename = path
+                .file_name()
+                .and_then(|n| n.to_str())
+                .unwrap_or("file")
+                .to_string();
+            self.tui.set_status(format!("✓ Saved: {}", filename));
         } else {
             // Start Save As prompt
             self.tui.start_save_as_prompt();
@@ -495,12 +535,17 @@ impl App {
                         }
                         InputMode::SaveAs => {
                             let path = PathBuf::from(input);
+                            let filename = path
+                                .file_name()
+                                .and_then(|n| n.to_str())
+                                .unwrap_or("file")
+                                .to_string();
                             let doc = self.tui.active_document_mut();
                             doc.path = Some(path);
                             if let Err(e) = doc.save() {
-                                self.tui.set_status(format!("Error saving file: {}", e));
+                                self.tui.set_status(format!("✗ Error saving file: {}", e));
                             } else {
-                                self.tui.set_status("File saved successfully");
+                                self.tui.set_status(format!("✓ Saved: {}", filename));
                             }
                         }
                         InputMode::Normal => {}

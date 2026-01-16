@@ -169,12 +169,27 @@ fn draw_status_bar(frame: &mut Frame, area: Rect, app: &App) {
         )
     };
 
-    // Use warning colors if there's a status message
-    let status_style = if app.status_message.is_some() {
-        Style::default()
-            .bg(Color::Rgb(255, 121, 98)) // Warning orange/red
-            .fg(Color::Rgb(0, 0, 0))
-            .add_modifier(Modifier::BOLD)
+    // Choose color based on message type
+    let status_style = if let Some(ref msg) = app.status_message {
+        if msg.starts_with('✓') {
+            // Success message - green
+            Style::default()
+                .bg(Color::Rgb(80, 180, 80)) // Green
+                .fg(Color::Rgb(0, 0, 0))
+                .add_modifier(Modifier::BOLD)
+        } else if msg.starts_with('✗') || msg.contains("Error") || msg.contains("error") {
+            // Error message - red
+            Style::default()
+                .bg(Color::Rgb(255, 121, 98)) // Red/orange
+                .fg(Color::Rgb(0, 0, 0))
+                .add_modifier(Modifier::BOLD)
+        } else {
+            // Warning/info message - yellow
+            Style::default()
+                .bg(Color::Rgb(255, 200, 80)) // Yellow
+                .fg(Color::Rgb(0, 0, 0))
+                .add_modifier(Modifier::BOLD)
+        }
     } else {
         Style::default()
             .bg(Color::Rgb(

@@ -72,13 +72,13 @@ fn main() -> Result<()> {
     // Open files or workspace
     if let Some(workspace_path) = cli.workspace {
         app.open_workspace(workspace_path)?;
-    } else if cli.files.is_empty() {
-        // Open empty document
-        app.new_document();
-    } else {
+    } else if !cli.files.is_empty() {
         for file in cli.files {
             app.open_file(file)?;
         }
+    } else {
+        // No files specified, start with an empty untitled document
+        app.new_document();
     }
 
     // Run the main loop
