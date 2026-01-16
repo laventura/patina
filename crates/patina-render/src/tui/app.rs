@@ -17,6 +17,12 @@ pub struct App {
     pub view_mode: ViewMode,
     /// Zen mode active
     pub zen_mode: bool,
+    /// Status message (shown in status bar, cleared on next action)
+    pub status_message: Option<String>,
+    /// Current input mode
+    pub input_mode: InputMode,
+    /// Input prompt state (when in input mode)
+    pub input_prompt: Option<InputPrompt>,
 }
 
 /// Editor view modes
@@ -30,6 +36,28 @@ pub enum ViewMode {
     Split,
 }
 
+/// Input mode for prompts
+#[derive(Debug, Clone, PartialEq)]
+pub enum InputMode {
+    /// Normal editing mode
+    Normal,
+    /// Prompting for file path (Open)
+    OpenFile,
+    /// Prompting for save path (Save As)
+    SaveAs,
+}
+
+/// Input prompt state
+#[derive(Debug, Clone)]
+pub struct InputPrompt {
+    /// Prompt message to display
+    pub prompt: String,
+    /// User input buffer
+    pub buffer: String,
+    /// Cursor position in input buffer
+    pub cursor: usize,
+}
+
 impl App {
     /// Create a new app
     pub fn new() -> Self {
@@ -40,7 +68,25 @@ impl App {
             should_quit: false,
             view_mode: ViewMode::Split,
             zen_mode: false,
+            status_message: None,
+            input_mode: InputMode::Normal,
+            input_prompt: None,
         }
+    }
+
+    /// Check if any document has unsaved changes
+    pub fn has_unsaved_changes(&self) -> bool {
+        self.documents.iter().any(|doc| doc.is_modified())
+    }
+
+    /// Set a status message
+    pub fn set_status(&mut self, msg: impl Into<String>) {
+        self.status_message = Some(msg.into());
+    }
+
+    /// Clear the status message
+    pub fn clear_status(&mut self) {
+        self.status_message = None;
     }
 
     /// Get the active document
@@ -104,6 +150,47 @@ impl App {
     /// Request quit
     pub fn quit(&mut self) {
         self.should_quit = true;
+    }
+
+    /// Start prompting for file path (Open)
+    pub fn start_open_prompt(&mut self) {
+        self.input_mode = InputMode::OpenFile;
+        self.input_prompt = Some(InputPrompt {
+            prompt: "Open file: ".to_string(),
+            buffer: String::new(),
+            cursor: 0,
+        });
+    }
+
+    /// Start prompting for save path (Save As)
+    pub fn start_save_as_prompt(&mut self) {
+        self.input_mode = InputMode::SaveAs;
+        self.input_prompt = Some(InputPrompt {
+            prompt: "Save as: ".to_string(),
+            buffer: String::new(),
+            cursor: 0,
+        });
+    }
+
+    /// Cancel the current input prompt
+    pub fn cancel_input(&mut self) {
+        self.input_mode = InputMode::Normal;
+        self.input_prompt = None;
+    }
+
+    /// Finish input and return the value
+    pub fn finish_input(&mut self) -> Option<String> {
+        if let Some(prompt) = self.input_prompt.take() {
+            self.input_mode = InputMode::Normal;
+            Some(prompt.buffer)
+        } else {
+            None
+        }
+    }
+
+    /// Check if in input mode
+    pub fn is_input_mode(&self) -> bool {
+        self.input_mode != InputMode::Normal
     }
 }
 

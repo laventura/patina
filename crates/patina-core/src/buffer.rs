@@ -92,9 +92,13 @@ impl Buffer {
 
     /// Convert a line and column to a character index
     pub fn line_col_to_char(&self, line: usize, col: usize) -> usize {
+        if line >= self.rope.len_lines() {
+            return self.rope.len_chars();
+        }
         let line_start = self.rope.line_to_char(line);
         let line_len = self.rope.line(line).len_chars();
-        line_start + col.min(line_len.saturating_sub(1))
+        // Allow cursor at end of line (col == line_len for lines without newline)
+        line_start + col.min(line_len)
     }
 
     /// Convert a character index to line and column
@@ -151,5 +155,50 @@ mod tests {
         let buf = Buffer::from_text("line 1\nline 2\nline 3");
         assert_eq!(buf.len_lines(), 3);
         assert_eq!(buf.line(1), Some("line 2\n".to_string()));
+    }
+
+    #[test]
+    fn test_delete() {
+        let mut buf = Buffer::from_text("Hello World");
+        buf.delete(5, 11); // Delete " World"
+        assert_eq!(buf.text(), "Hello");
+        assert!(buf.is_modified());
+    }
+
+    #[test]
+    fn test_slice() {
+        let buf = Buffer::from_text("Hello World");
+        assert_eq!(buf.slice(0, 5), "Hello");
+        assert_eq!(buf.slice(6, 11), "World");
+    }
+
+    #[test]
+    fn test_line_col_to_char() {
+        let buf = Buffer::from_text("abc\ndefgh\nij");
+        // Line 0: "abc\n" (4 chars)
+        // Line 1: "defgh\n" (6 chars)
+        // Line 2: "ij" (2 chars)
+        assert_eq!(buf.line_col_to_char(0, 0), 0); // 'a'
+        assert_eq!(buf.line_col_to_char(0, 2), 2); // 'c'
+        assert_eq!(buf.line_col_to_char(1, 0), 4); // 'd'
+        assert_eq!(buf.line_col_to_char(1, 3), 7); // 'g'
+        assert_eq!(buf.line_col_to_char(2, 0), 10); // 'i'
+    }
+
+    #[test]
+    fn test_char_to_line_col() {
+        let buf = Buffer::from_text("abc\ndefgh\nij");
+        assert_eq!(buf.char_to_line_col(0), (0, 0)); // 'a'
+        assert_eq!(buf.char_to_line_col(2), (0, 2)); // 'c'
+        assert_eq!(buf.char_to_line_col(4), (1, 0)); // 'd'
+        assert_eq!(buf.char_to_line_col(7), (1, 3)); // 'g'
+        assert_eq!(buf.char_to_line_col(10), (2, 0)); // 'i'
+    }
+
+    #[test]
+    fn test_replace() {
+        let mut buf = Buffer::from_text("Hello World");
+        buf.replace(6, 11, "Rust");
+        assert_eq!(buf.text(), "Hello Rust");
     }
 }

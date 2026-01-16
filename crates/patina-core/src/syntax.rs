@@ -6,10 +6,10 @@ use syntect::highlighting::{Style, Theme, ThemeSet};
 use syntect::parsing::{SyntaxReference, SyntaxSet};
 
 /// Global syntax set (loaded once)
-static SYNTAX_SET: Lazy<SyntaxSet> = Lazy::new(|| SyntaxSet::load_defaults_newlines());
+static SYNTAX_SET: Lazy<SyntaxSet> = Lazy::new(SyntaxSet::load_defaults_newlines);
 
 /// Global theme set
-static THEME_SET: Lazy<ThemeSet> = Lazy::new(|| ThemeSet::load_defaults());
+static THEME_SET: Lazy<ThemeSet> = Lazy::new(ThemeSet::load_defaults);
 
 /// A syntax highlighter
 pub struct Highlighter {

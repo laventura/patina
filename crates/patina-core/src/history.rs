@@ -186,4 +186,92 @@ mod tests {
         let redone = history.redo();
         assert!(redone.is_some());
     }
+
+    #[test]
+    fn test_multiple_edits() {
+        let mut history = History::new();
+
+        // Record multiple edits
+        history.record(Edit::insert(
+            0,
+            "a".to_string(),
+            dummy_cursor(),
+            dummy_cursor(),
+        ));
+        history.record(Edit::insert(
+            1,
+            "b".to_string(),
+            dummy_cursor(),
+            dummy_cursor(),
+        ));
+        history.record(Edit::insert(
+            2,
+            "c".to_string(),
+            dummy_cursor(),
+            dummy_cursor(),
+        ));
+
+        assert_eq!(history.undo_count(), 3);
+
+        // Undo all
+        assert!(history.undo().is_some());
+        assert!(history.undo().is_some());
+        assert!(history.undo().is_some());
+        assert!(history.undo().is_none());
+
+        assert_eq!(history.redo_count(), 3);
+    }
+
+    #[test]
+    fn test_new_edit_clears_redo() {
+        let mut history = History::new();
+
+        history.record(Edit::insert(
+            0,
+            "a".to_string(),
+            dummy_cursor(),
+            dummy_cursor(),
+        ));
+        history.record(Edit::insert(
+            1,
+            "b".to_string(),
+            dummy_cursor(),
+            dummy_cursor(),
+        ));
+
+        // Undo one edit
+        history.undo();
+        assert!(history.can_redo());
+
+        // New edit should clear redo stack
+        history.record(Edit::insert(
+            1,
+            "x".to_string(),
+            dummy_cursor(),
+            dummy_cursor(),
+        ));
+        assert!(!history.can_redo());
+    }
+
+    #[test]
+    fn test_edit_with_cursor_positions() {
+        let cursor_before = Selection::cursor(Position::new(0, 0));
+        let cursor_after = Selection::cursor(Position::new(0, 5));
+
+        let edit = Edit::insert(0, "hello".to_string(), cursor_before, cursor_after);
+
+        assert_eq!(edit.cursor_before.head.col, 0);
+        assert_eq!(edit.cursor_after.head.col, 5);
+    }
+
+    #[test]
+    fn test_delete_edit() {
+        let cursor_before = Selection::cursor(Position::new(0, 5));
+        let cursor_after = Selection::cursor(Position::new(0, 0));
+
+        let edit = Edit::delete(0, "hello".to_string(), cursor_before, cursor_after);
+
+        assert_eq!(edit.deleted, "hello");
+        assert!(edit.inserted.is_empty());
+    }
 }

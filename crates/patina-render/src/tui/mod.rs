@@ -4,7 +4,7 @@ mod app;
 mod editor;
 mod widgets;
 
-pub use app::{App, ViewMode};
+pub use app::{App, InputMode, InputPrompt, ViewMode};
 pub use editor::EditorWidget;
 
 use crossterm::{

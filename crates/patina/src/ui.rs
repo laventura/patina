@@ -122,34 +122,72 @@ fn draw_editor_area(frame: &mut Frame, area: Rect, app: &App) {
 
 /// Draw the status bar
 fn draw_status_bar(frame: &mut Frame, area: Rect, app: &App) {
+    // If in input mode, show the input prompt
+    if let Some(ref prompt) = app.input_prompt {
+        let input_text = format!("{}{}", prompt.prompt, prompt.buffer);
+        let cursor_pos = prompt.prompt.len() + prompt.cursor;
+
+        let input_style = Style::default()
+            .bg(Color::Rgb(
+                app.theme.ui_status_bar.r,
+                app.theme.ui_status_bar.g,
+                app.theme.ui_status_bar.b,
+            ))
+            .fg(Color::Rgb(
+                app.theme.fg_primary.r,
+                app.theme.fg_primary.g,
+                app.theme.fg_primary.b,
+            ));
+
+        let paragraph = Paragraph::new(input_text).style(input_style);
+        frame.render_widget(paragraph, area);
+
+        // Set cursor position in the status bar for input
+        frame.set_cursor_position((area.x + cursor_pos as u16, area.y));
+        return;
+    }
+
     let doc = app.active_document();
 
-    let mode = match app.view_mode {
-        ViewMode::Raw => "RAW",
-        ViewMode::Rendered => "PREVIEW",
-        ViewMode::Split => "SPLIT",
+    // If there's a status message, show it prominently
+    let status = if let Some(ref msg) = app.status_message {
+        format!(" {} ", msg)
+    } else {
+        let mode = match app.view_mode {
+            ViewMode::Raw => "RAW",
+            ViewMode::Rendered => "PREVIEW",
+            ViewMode::Split => "SPLIT",
+        };
+
+        format!(
+            " {} │ Ln {}, Col {} │ {} │ {} ",
+            if doc.is_modified() { "●" } else { "○" },
+            doc.cursor.0 + 1,
+            doc.cursor.1 + 1,
+            mode,
+            app.theme.name,
+        )
     };
 
-    let status = format!(
-        " {} │ Ln {}, Col {} │ {} │ {} ",
-        if doc.is_modified() { "●" } else { "○" },
-        doc.cursor.0 + 1,
-        doc.cursor.1 + 1,
-        mode,
-        app.theme.name,
-    );
-
-    let status_style = Style::default()
-        .bg(Color::Rgb(
-            app.theme.ui_status_bar.r,
-            app.theme.ui_status_bar.g,
-            app.theme.ui_status_bar.b,
-        ))
-        .fg(Color::Rgb(
-            app.theme.fg_primary.r,
-            app.theme.fg_primary.g,
-            app.theme.fg_primary.b,
-        ));
+    // Use warning colors if there's a status message
+    let status_style = if app.status_message.is_some() {
+        Style::default()
+            .bg(Color::Rgb(255, 121, 98)) // Warning orange/red
+            .fg(Color::Rgb(0, 0, 0))
+            .add_modifier(Modifier::BOLD)
+    } else {
+        Style::default()
+            .bg(Color::Rgb(
+                app.theme.ui_status_bar.r,
+                app.theme.ui_status_bar.g,
+                app.theme.ui_status_bar.b,
+            ))
+            .fg(Color::Rgb(
+                app.theme.fg_primary.r,
+                app.theme.fg_primary.g,
+                app.theme.fg_primary.b,
+            ))
+    };
 
     let paragraph = Paragraph::new(status).style(status_style);
     frame.render_widget(paragraph, area);

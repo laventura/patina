@@ -15,7 +15,7 @@ pub mod syntax;
 pub use buffer::Buffer;
 pub use document::Document;
 pub use frontmatter::Frontmatter;
-pub use history::History;
+pub use history::{Edit, History};
 pub use parser::MarkdownParser;
 pub use selection::Selection;
 
