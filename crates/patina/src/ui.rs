@@ -159,9 +159,17 @@ fn draw_status_bar(frame: &mut Frame, area: Rect, app: &App) {
             ViewMode::Split => "SPLIT",
         };
 
+        let filename = doc
+            .path
+            .as_ref()
+            .and_then(|p| p.file_name())
+            .and_then(|n| n.to_str())
+            .unwrap_or("Untitled");
+
         format!(
-            " {} │ Ln {}, Col {} │ {} │ {} ",
+            " {} {} │ Ln {}, Col {} │ {} │ {} ",
             if doc.is_modified() { "●" } else { "○" },
+            filename,
             doc.cursor.0 + 1,
             doc.cursor.1 + 1,
             mode,

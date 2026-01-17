@@ -203,13 +203,19 @@ impl App {
                 self.tui.cycle_view_mode();
             }
 
-            // Next tab (Alt+Right - works in all terminals)
+            // Next tab (Alt+Right, Ctrl+PageDown, or Ctrl+N)
             KeyCode::Right if alt => {
                 self.tui.next_document();
             }
+            KeyCode::PageDown if ctrl => {
+                self.tui.next_document();
+            }
 
-            // Previous tab (Alt+Left - works in all terminals)
+            // Previous tab (Alt+Left, Ctrl+PageUp, or Ctrl+B)
             KeyCode::Left if alt => {
+                self.tui.prev_document();
+            }
+            KeyCode::PageUp if ctrl => {
                 self.tui.prev_document();
             }
 

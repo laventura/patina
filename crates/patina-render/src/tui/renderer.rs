@@ -91,6 +91,11 @@ impl<'a> MarkdownRenderer<'a> {
                 self.render_list_item(node, lines, context);
             }
 
+            NodeValue::TaskItem(symbol) => {
+                // Task list items (checkboxes)
+                self.render_task_list_item(node, *symbol, lines, context);
+            }
+
             NodeValue::ThematicBreak => {
                 // Horizontal rule
                 let hr = "─".repeat(self.width as usize);
@@ -270,6 +275,11 @@ impl<'a> MarkdownRenderer<'a> {
                 spans.push(Span::raw(" "));
             }
 
+            NodeValue::TaskItem(_) => {
+                // TaskItem nodes are handled at block level, not inline
+                // This shouldn't be called during inline rendering
+            }
+
             _ => {
                 // Recurse for other inline elements
                 for child in node.children() {
@@ -370,19 +380,61 @@ impl<'a> MarkdownRenderer<'a> {
     ) {
         context.in_list = true;
         context.list_depth += 1;
+
+        // Save the current list_number before entering this list (for nested lists)
+        let saved_list_number = context.list_number;
         context.list_number = list.start;
 
         for child in node.children() {
+            // Only increment for Item nodes (skip other potential children)
+            let is_item = matches!(child.data.borrow().value, NodeValue::Item(_));
             self.render_node(child, lines, context);
-            if matches!(list.list_type, ListType::Ordered) {
+            if is_item && matches!(list.list_type, ListType::Ordered) {
                 context.list_number += 1;
             }
         }
+
+        // Restore the saved list_number when exiting this list
+        context.list_number = saved_list_number;
 
         context.list_depth -= 1;
         if context.list_depth == 0 {
             context.in_list = false;
             lines.push(Line::from(""));
+        }
+    }
+
+    /// Render a task list item (checkbox item)
+    fn render_task_list_item(
+        &self,
+        node: &'a AstNode<'a>,
+        symbol: Option<char>,
+        lines: &mut Vec<StyledLine>,
+        context: &mut RenderContext,
+    ) {
+        let indent = "  ".repeat(context.list_depth.saturating_sub(1));
+
+        // Determine checkbox marker based on symbol
+        let is_checked = matches!(symbol, Some('x') | Some('X'));
+        let marker = if is_checked { "[✓] " } else { "[ ] " };
+
+        // Collect content spans for the first paragraph
+        let start_line_idx = lines.len();
+
+        // Render item content (skip the TaskItem node itself in inline rendering)
+        for child in node.children() {
+            self.render_node(child, lines, context);
+        }
+
+        // Prepend marker to the first line of content
+        if lines.len() > start_line_idx {
+            let first_content_line = &lines[start_line_idx];
+            let mut new_spans = vec![Span::styled(
+                format!("{}{}", indent, marker),
+                Style::default().fg(self.theme.fg_secondary.to_ratatui()),
+            )];
+            new_spans.extend(first_content_line.spans.iter().cloned());
+            lines[start_line_idx] = Line::from(new_spans);
         }
     }
 
@@ -395,25 +447,8 @@ impl<'a> MarkdownRenderer<'a> {
     ) {
         let indent = "  ".repeat(context.list_depth.saturating_sub(1));
 
-        // Check for task list marker (checkbox)
-        let mut is_task_list = false;
-        let mut is_checked = false;
-        for child in node.children() {
-            if let NodeValue::TaskItem(symbol) = &child.data.borrow().value {
-                is_task_list = true;
-                is_checked = symbol.is_some() && *symbol != Some(' ');
-                break;
-            }
-        }
-
-        // Determine bullet/number/checkbox
-        let marker = if is_task_list {
-            if is_checked {
-                "[✓] ".to_string()
-            } else {
-                "[ ] ".to_string()
-            }
-        } else if context.in_list {
+        // Determine bullet/number
+        let marker = if context.in_list {
             // Check parent list type
             if let Some(parent) = node.parent() {
                 if let NodeValue::List(list) = &parent.data.borrow().value {
@@ -451,18 +486,104 @@ impl<'a> MarkdownRenderer<'a> {
         }
     }
 
-    /// Render a table (simplified for now)
+    /// Render a table with proper formatting
     fn render_table(
         &self,
         node: &'a AstNode<'a>,
         lines: &mut Vec<StyledLine>,
-        context: &mut RenderContext,
+        _context: &mut RenderContext,
     ) {
-        // Simple table rendering - just show the content
-        // TODO: Implement proper table layout with borders
+        use unicode_width::UnicodeWidthStr;
+
+        // Collect all rows and cells
+        let mut rows: Vec<Vec<String>> = Vec::new();
+
         for child in node.children() {
-            self.render_node(child, lines, context);
+            let ast = child.data.borrow();
+            if matches!(ast.value, NodeValue::TableRow(_)) {
+                let mut row_cells: Vec<String> = Vec::new();
+                for cell in child.children() {
+                    let cell_ast = cell.data.borrow();
+                    if matches!(cell_ast.value, NodeValue::TableCell) {
+                        let cell_text = self.extract_text(cell);
+                        row_cells.push(cell_text);
+                    }
+                }
+                rows.push(row_cells);
+            }
         }
+
+        if rows.is_empty() {
+            return;
+        }
+
+        // Calculate column widths using display width (handles emojis correctly)
+        let num_cols = rows.iter().map(|r| r.len()).max().unwrap_or(0);
+        let mut col_widths = vec![0; num_cols];
+        for row in &rows {
+            for (i, cell) in row.iter().enumerate() {
+                // Use unicode display width instead of character count
+                let display_width = UnicodeWidthStr::width(cell.as_str());
+                col_widths[i] = col_widths[i].max(display_width);
+            }
+        }
+
+        // Helper to pad string to display width (handles emojis)
+        let pad_to_width = |text: &str, target_width: usize| -> String {
+            let display_width = UnicodeWidthStr::width(text);
+            if display_width >= target_width {
+                text.to_string()
+            } else {
+                let padding = target_width - display_width;
+                format!("{}{}", text, " ".repeat(padding))
+            }
+        };
+
+        // Render header (first row)
+        if !rows.is_empty() {
+            let header_row = &rows[0];
+            let mut header_spans = Vec::new();
+            header_spans.push(Span::raw("│ "));
+            for (i, cell) in header_row.iter().enumerate() {
+                let width = col_widths[i];
+                header_spans.push(Span::styled(
+                    pad_to_width(cell, width),
+                    Style::default()
+                        .fg(self.theme.md_heading.to_ratatui())
+                        .add_modifier(Modifier::BOLD),
+                ));
+                header_spans.push(Span::raw(" │ "));
+            }
+            lines.push(Line::from(header_spans));
+
+            // Separator line
+            let mut sep_spans = Vec::new();
+            sep_spans.push(Span::raw("├─"));
+            for (i, &width) in col_widths.iter().enumerate() {
+                sep_spans.push(Span::raw("─".repeat(width)));
+                if i < col_widths.len() - 1 {
+                    sep_spans.push(Span::raw("─┼─"));
+                }
+            }
+            sep_spans.push(Span::raw("─┤"));
+            lines.push(Line::from(sep_spans));
+
+            // Render data rows (skip header)
+            for row in rows.iter().skip(1) {
+                let mut row_spans = Vec::new();
+                row_spans.push(Span::raw("│ "));
+                for (i, cell) in row.iter().enumerate() {
+                    let width = col_widths[i];
+                    row_spans.push(Span::styled(
+                        pad_to_width(cell, width),
+                        Style::default().fg(self.theme.fg_primary.to_ratatui()),
+                    ));
+                    row_spans.push(Span::raw(" │ "));
+                }
+                lines.push(Line::from(row_spans));
+            }
+        }
+
         lines.push(Line::from(""));
     }
 

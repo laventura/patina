@@ -18,8 +18,8 @@
    - **Test**: Lists now show `• Item text` on same line
 
 3. **Header Visual Markers Not Distinct**
-   - **Problem**: Unicode block characters (█▓▒░) rendered identically, then markdown hashmarks didn't look good
-   - **Fix**: Changed to visually distinct Unicode blocks: `█` (H1), `▓` (H2), `▒` (H3), `░` (H4), `▪` (H5), `▫` (H6)
+   - **Problem**: Unicode **block** characters (█▓▒░) rendered identically, then markdown hashmarks didn't look good
+   - **Fix**: Changed to _visually_ distinct Unicode blocks: `█` (H1), `▓` (H2), `▒` (H3), `░` (H4), `▪` (H5), `▫` (H6)
    - **Test**: Each heading level now clearly distinguishable in Preview mode
 
 4. **Tab Character Support**
@@ -96,6 +96,7 @@ cargo run --release -- examples/frontmatter_sample.md
 - [x] Inline code with background
 - [x] Tables (basic rendering)
 - [x] Horizontal rules
+- [ ] Unchecked feature test
 
 ### v0.5.0 - Syntax Highlighting & Frontmatter ✅
 - [x] Syntax highlighting in code blocks (50+ languages)
@@ -104,12 +105,24 @@ cargo run --release -- examples/frontmatter_sample.md
 - [x] Task list checkboxes ([ ] and [✓])
 - [x] Theme integration for colors
 
-### Additional Fixes ✅
+### Additional Fixes (Round 1) ✅
 - [x] Tab key now works in editor
 - [x] Status message for view mode changes
 - [x] Alternative keybinding (Ctrl+P) for view toggle
 - [x] List items render correctly (no extra newlines)
 - [x] Headers have distinct visual markers
+
+### Additional Fixes (Round 2) ✅
+- [x] **Table rendering**: Tables now render properly with borders and column alignment
+- [x] **Tab switching keybindings**: Added Ctrl+PageDown (next) and Ctrl+PageUp (previous) as alternatives to Alt+Right/Left for VNC/Screen Sharing compatibility
+- [x] **Checkbox rendering**: Task list items with [x] now render correctly as [✓]
+- [x] **Status bar filename**: Current filename now displayed in status bar for easy identification
+
+### Additional Fixes (Round 3) ✅
+- [x] **Checkbox rendering fix**: Fixed TaskItem detection by searching all descendants (not just direct children) - checkboxes with [x] and [X] now render as [✓]
+- [x] **Numbered list ordering**: Fixed list numbering to only increment for Item nodes (handles nested content correctly)
+- [x] **Table emoji alignment**: Fixed column alignment with emojis using unicode-width for proper display width calculation
+- [x] **Tab switching keybindings update**: Changed from Ctrl+] / Ctrl+[ to Ctrl+PageDown / Ctrl+PageUp for better VNC compatibility
 
 ## Testing Checklist
 
@@ -153,7 +166,13 @@ cargo run --release -- examples/frontmatter_sample.md
 # Should see text with │ border in preview
 ```
 
-## Performance
+Lets see if the Tab char works. Inserting tab here:     Yes. IT does. 
+
+Foo
+
+    Foo bar 
+
+### Performance
 
 All targets met:
 - ✅ Startup: <50ms
@@ -168,9 +187,9 @@ All targets met:
 |-----|--------|
 | **Ctrl+P** | Toggle view mode (Raw → Preview → Split) |
 | **Ctrl+\\** | Toggle view mode (alternative) |
-| **Tab** | Insert tab character |
-| **Alt+Right** | Next tab |
-| **Alt+Left** | Previous tab |
+| **Tab** | Insert tab character (or spaces, configurable) |
+| **Alt+Right** or **Ctrl+PageDown** | Next tab |
+| **Alt+Left** or **Ctrl+PageUp** | Previous tab |
 | **Ctrl+S** | Save |
 | **Ctrl+Q** | Quit |
 | **Ctrl+Z** | Undo |
