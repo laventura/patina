@@ -10,6 +10,7 @@ use ratatui::style::{Modifier, Style};
 use ratatui::text::{Line, Span};
 
 use crate::Theme;
+use patina_extensions::{EmojiExpander, LatexRenderer};
 
 /// A styled line for rendering (using owned data)
 pub type StyledLine = Line<'static>;
@@ -18,6 +19,8 @@ pub type StyledLine = Line<'static>;
 pub struct MarkdownRenderer<'a> {
     theme: &'a Theme,
     width: u16,
+    latex_renderer: LatexRenderer,
+    emoji_expander: EmojiExpander,
 }
 
 /// Rendering context for tracking state during AST walk
@@ -33,7 +36,12 @@ struct RenderContext {
 impl<'a> MarkdownRenderer<'a> {
     /// Create a new renderer with the given theme and width
     pub fn new(theme: &'a Theme, width: u16) -> Self {
-        Self { theme, width }
+        Self {
+            theme,
+            width,
+            latex_renderer: LatexRenderer::new(),
+            emoji_expander: EmojiExpander::new(),
+        }
     }
 
     /// Render a markdown AST to styled lines
@@ -188,6 +196,76 @@ impl<'a> MarkdownRenderer<'a> {
         spans
     }
 
+    /// Process text with LaTeX and emoji extensions
+    /// Returns spans with LaTeX rendered to Unicode and emojis expanded
+    fn process_text_with_extensions(&self, text: &str, base_style: Style) -> Vec<Span<'static>> {
+        let mut spans = Vec::new();
+        let mut remaining = text;
+
+        while !remaining.is_empty() {
+            // Check for inline LaTeX ($...$)
+            if let Some(start_pos) = remaining.find('$') {
+                // Add text before the $ as normal text (but process emojis)
+                if start_pos > 0 {
+                    let before = &remaining[..start_pos];
+                    let with_emoji = self.emoji_expander.expand_all(before);
+                    spans.push(Span::styled(
+                        with_emoji,
+                        base_style.fg(self.theme.fg_primary.to_ratatui()),
+                    ));
+                }
+
+                remaining = &remaining[start_pos + 1..];
+
+                // Check if this is display math ($$)
+                let is_display = remaining.starts_with('$');
+                if is_display {
+                    remaining = &remaining[1..]; // Skip second $
+
+                    // Find closing $$
+                    if let Some(end_pos) = remaining.find("$$") {
+                        let latex = &remaining[..end_pos];
+                        let rendered = self.latex_renderer.render(latex);
+                        spans.push(Span::styled(
+                            format!(" {} ", rendered), // Pad display math
+                            base_style
+                                .fg(self.theme.md_code.to_ratatui())
+                                .add_modifier(Modifier::BOLD),
+                        ));
+                        remaining = &remaining[end_pos + 2..]; // Skip closing $$
+                    } else {
+                        // No closing $$, treat as literal
+                        spans.push(Span::styled("$$", base_style.fg(self.theme.fg_primary.to_ratatui())));
+                    }
+                } else {
+                    // Inline math ($...$)
+                    if let Some(end_pos) = remaining.find('$') {
+                        let latex = &remaining[..end_pos];
+                        let rendered = self.latex_renderer.render(latex);
+                        spans.push(Span::styled(
+                            rendered,
+                            base_style.fg(self.theme.md_code.to_ratatui()),
+                        ));
+                        remaining = &remaining[end_pos + 1..]; // Skip closing $
+                    } else {
+                        // No closing $, treat as literal
+                        spans.push(Span::styled("$", base_style.fg(self.theme.fg_primary.to_ratatui())));
+                    }
+                }
+            } else {
+                // No LaTeX found, process remaining text with emoji
+                let with_emoji = self.emoji_expander.expand_all(remaining);
+                spans.push(Span::styled(
+                    with_emoji,
+                    base_style.fg(self.theme.fg_primary.to_ratatui()),
+                ));
+                break;
+            }
+        }
+
+        spans
+    }
+
     /// Recursively collect inline spans
     fn collect_inline_spans(
         &self,
@@ -199,10 +277,9 @@ impl<'a> MarkdownRenderer<'a> {
 
         match &ast.value {
             NodeValue::Text(text) => {
-                spans.push(Span::styled(
-                    text.to_string(),
-                    inherited_style.fg(self.theme.fg_primary.to_ratatui()),
-                ));
+                // Process text with LaTeX and emoji extensions
+                let processed_spans = self.process_text_with_extensions(text, inherited_style);
+                spans.extend(processed_spans);
             }
 
             NodeValue::Code(code) => {
@@ -494,6 +571,14 @@ impl<'a> MarkdownRenderer<'a> {
         _context: &mut RenderContext,
     ) {
         use unicode_width::UnicodeWidthStr;
+        use comrak::nodes::TableAlignment;
+
+        // Extract alignment information from table node
+        let alignments = if let NodeValue::Table(table) = &node.data.borrow().value {
+            table.alignments.clone()
+        } else {
+            Vec::new()
+        };
 
         // Collect all rows and cells
         let mut rows: Vec<Vec<String>> = Vec::new();
@@ -528,14 +613,29 @@ impl<'a> MarkdownRenderer<'a> {
             }
         }
 
-        // Helper to pad string to display width (handles emojis)
-        let pad_to_width = |text: &str, target_width: usize| -> String {
+        // Helper to pad string to display width with alignment (handles emojis)
+        let pad_to_width = |text: &str, target_width: usize, alignment: &TableAlignment| -> String {
             let display_width = UnicodeWidthStr::width(text);
             if display_width >= target_width {
                 text.to_string()
             } else {
                 let padding = target_width - display_width;
-                format!("{}{}", text, " ".repeat(padding))
+                match alignment {
+                    TableAlignment::Left | TableAlignment::None => {
+                        // Left align (default)
+                        format!("{}{}", text, " ".repeat(padding))
+                    }
+                    TableAlignment::Right => {
+                        // Right align
+                        format!("{}{}", " ".repeat(padding), text)
+                    }
+                    TableAlignment::Center => {
+                        // Center align
+                        let left_pad = padding / 2;
+                        let right_pad = padding - left_pad;
+                        format!("{}{}{}", " ".repeat(left_pad), text, " ".repeat(right_pad))
+                    }
+                }
             }
         };
 
@@ -546,8 +646,9 @@ impl<'a> MarkdownRenderer<'a> {
             header_spans.push(Span::raw("│ "));
             for (i, cell) in header_row.iter().enumerate() {
                 let width = col_widths[i];
+                let alignment = alignments.get(i).unwrap_or(&TableAlignment::None);
                 header_spans.push(Span::styled(
-                    pad_to_width(cell, width),
+                    pad_to_width(cell, width, alignment),
                     Style::default()
                         .fg(self.theme.md_heading.to_ratatui())
                         .add_modifier(Modifier::BOLD),
@@ -574,8 +675,9 @@ impl<'a> MarkdownRenderer<'a> {
                 row_spans.push(Span::raw("│ "));
                 for (i, cell) in row.iter().enumerate() {
                     let width = col_widths[i];
+                    let alignment = alignments.get(i).unwrap_or(&TableAlignment::None);
                     row_spans.push(Span::styled(
-                        pad_to_width(cell, width),
+                        pad_to_width(cell, width, alignment),
                         Style::default().fg(self.theme.fg_primary.to_ratatui()),
                     ));
                     row_spans.push(Span::raw(" │ "));

@@ -76,6 +76,13 @@ static EMOJI: Lazy<HashMap<&'static str, &'static str>> = Lazy::new(|| {
     m.insert("sparkles", "✨");
     m.insert("zap", "⚡");
 
+    // Additional common emojis
+    m.insert("tada", "🎉");
+    m.insert("construction", "🚧");
+    m.insert("white_check_mark", "✅");
+    m.insert("round_pushpin", "📍");
+    m.insert("pushpin", "📌");
+
     m
 });
 
@@ -96,28 +103,42 @@ impl EmojiExpander {
     /// Expand all shortcodes in text (:shortcode: -> emoji)
     pub fn expand_all(&self, text: &str) -> String {
         let mut result = String::with_capacity(text.len());
-        let mut chars = text.chars().peekable();
+        let mut chars = text.char_indices();
 
-        while let Some(c) = chars.next() {
+        while let Some((i, c)) = chars.next() {
             if c == ':' {
-                // Try to parse shortcode
-                let shortcode: String = chars
-                    .by_ref()
-                    .take_while(|&c| c != ':' && c != ' ' && c != '\n')
-                    .collect();
+                // Collect characters until we hit ':', ' ', '\n', or end of string
+                let mut shortcode = String::new();
+                let mut found_closing = false;
 
-                // Check if we ended with a colon (valid shortcode)
-                if let Some(':') = text[result.len() + 1 + shortcode.len()..].chars().next() {
+                // Peek ahead and collect shortcode characters
+                let remaining = &text[i + 1..];
+                for ch in remaining.chars() {
+                    if ch == ':' {
+                        found_closing = true;
+                        break;
+                    } else if ch == ' ' || ch == '\n' {
+                        break;
+                    } else {
+                        shortcode.push(ch);
+                    }
+                }
+
+                // Try to expand if we found a valid shortcode
+                if found_closing && !shortcode.is_empty() {
                     if let Some(emoji) = EMOJI.get(shortcode.as_str()) {
                         result.push_str(emoji);
+                        // Skip the shortcode and closing colon
+                        for _ in 0..shortcode.len() {
+                            chars.next();
+                        }
                         chars.next(); // Skip closing colon
                         continue;
                     }
                 }
 
-                // Not a valid shortcode, output as-is
+                // Not a valid shortcode, output the opening colon
                 result.push(':');
-                result.push_str(&shortcode);
             } else {
                 result.push(c);
             }

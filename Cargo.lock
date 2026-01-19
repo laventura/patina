@@ -3226,7 +3226,7 @@ checksum = "df94ce210e5bc13cb6651479fa48d14f601d9858cfe0467f43ae157023b938d3"
 
 [[package]]
 name = "patina"
-version = "0.1.0"
+version = "0.6.0"
 dependencies = [
  "anyhow",
  "clap",
@@ -3248,7 +3248,7 @@ dependencies = [
 
 [[package]]
 name = "patina-core"
-version = "0.1.0"
+version = "0.6.0"
 dependencies = [
  "comrak",
  "log",
@@ -3266,7 +3266,7 @@ dependencies = [
 
 [[package]]
 name = "patina-extensions"
-version = "0.1.0"
+version = "0.6.0"
 dependencies = [
  "log",
  "once_cell",
@@ -3276,7 +3276,7 @@ dependencies = [
 
 [[package]]
 name = "patina-gui"
-version = "0.1.0"
+version = "0.6.0"
 dependencies = [
  "anyhow",
  "arboard",
@@ -3298,11 +3298,14 @@ dependencies = [
 
 [[package]]
 name = "patina-i18n"
-version = "0.1.0"
+version = "0.6.0"
+dependencies = [
+ "once_cell",
+]
 
 [[package]]
 name = "patina-render"
-version = "0.1.0"
+version = "0.6.0"
 dependencies = [
  "comrak",
  "crossterm 0.27.0",
@@ -3310,6 +3313,7 @@ dependencies = [
  "egui",
  "log",
  "patina-core",
+ "patina-extensions",
  "ratatui",
  "serde_json",
  "unicode-width",

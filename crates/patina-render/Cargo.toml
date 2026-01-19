@@ -12,6 +12,7 @@ gui = ["egui", "eframe"]
 
 [dependencies]
 patina-core = { path = "../patina-core" }
+patina-extensions = { path = "../patina-extensions" }
 
 # TUI (optional, default)
 ratatui = { workspace = true, optional = true }
